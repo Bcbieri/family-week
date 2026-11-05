@@ -133,6 +133,28 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 .col.today .dh em{font-size:3vw}.col.today .dh b{font-size:1.35vw}
 .seg.today .ev .ti{font-size:1.6vw}.seg.today .lab em{font-size:3vw}
 
+.board{grid-template-rows:minmax(0,1fr)}
+.wkcol{display:flex;flex-direction:column;gap:.7vw;min-height:0;min-width:0}
+.wcard{flex:1 1 0;display:flex;flex-direction:column;gap:.5vw;min-height:0}
+.wcard ul{flex-direction:column;flex:1;min-height:0;overflow:hidden;padding:.1vw .1vw .5vw}
+.wcard .ev{flex:none}
+.wcard .strip.pill{padding:.45vw .7vw;align-self:stretch}
+.wcard.today .dh{background:var(--today);color:var(--on)} .wcard.today .dh b{color:var(--on-soft)}
+.wcard.today .ev .ti{font-size:1.6vw}
+.lefttop{display:flex;gap:.9vw;align-items:stretch}
+.wx{display:flex;align-items:center;gap:1vw;padding:.8vw 1.4vw .8vw 1vw}
+.wxicon svg{width:4.2vw;height:4.2vw;display:block}
+.wxnow{display:flex;align-items:baseline;gap:.7vw}
+.wxnow #wxtemp{font-family:var(--display);font-weight:600;font-size:3.6vw;line-height:.9;font-variant-numeric:lining-nums}
+.wxcond{font-family:var(--display);font-style:italic;font-size:1.6vw;color:var(--muted)}
+.wxday{font-family:var(--mono);font-size:1vw;letter-spacing:.04em;color:var(--fg);margin-top:.35vw}
+@media (max-width:760px), (orientation:portrait){
+  .lefttop{flex-direction:column;gap:10px}.wx{border-radius:12px;padding:12px 16px;gap:14px}
+  .wxicon svg{width:48px;height:48px}.wxnow #wxtemp{font-size:40px}.wxcond{font-size:18px}.wxday{font-size:12px}
+  .board{display:flex!important;flex-direction:column;gap:12px}
+  .wkcol{gap:12px}
+}
+
 @media (max-width:760px), (orientation:portrait){
   body{overflow:auto} html,body{height:auto}
   .wrap{height:auto;display:flex;flex-direction:column;gap:12px;padding-block:14px}
@@ -167,7 +189,8 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 <canvas id="paint" aria-hidden="true"></canvas>
 <div class="wrap">
   <header class="top">
-    <div class="plate pill"><div class="clock" id="clock"></div><div class="dateline" id="dateline"></div></div>
+    <div class="lefttop"><div class="plate pill"><div class="clock" id="clock"></div><div class="dateline" id="dateline"></div></div>
+    <div class="wx pill" id="wx" hidden><div class="wxicon" id="wxicon"></div><div><div class="wxnow"><span id="wxtemp"></span><span class="wxcond" id="wxcond"></span></div><div class="wxday" id="wxday"></div></div></div></div>
     <div class="key pill">
       <div class="legend">
         <span><i style="background:var(--p1)"></i><b id="nb"></b></span>
@@ -261,11 +284,17 @@ function weekendItems(d,H){
 }
 function render(){
   const H=header();span();
-  const t=H.today, wdToday=t>=1&&t<=5;
+  const t=H.today;
   const b=document.getElementById("board");
-  b.style.gridTemplateColumns=[1,2,3,4,5].map(d=>d===t?"minmax(0,2fr)":"minmax(0,1fr)").join(" ");
+  b.style.gridTemplateColumns=[1,2,3,4,5].map(d=>d===t?"minmax(0,2fr)":"minmax(0,1fr)").join(" ")+" minmax(0,1.05fr)";
   let html="";
-  for(let d=1;d<=5;d++)html+=`<section class="col${d===t?" today":""}" style="grid-column:${d};grid-row:${d===t?"1 / span 3":"1"}">${column(d,H)}</section>`;
+  for(let d=1;d<=5;d++)html+=`<section class="col${d===t?" today":""}">${column(d,H)}</section>`;
+  html+=`<section class="wkcol">`+[6,0].map(d=>`<div class="wcard${d===t?" today":""}"><div class="dh pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div><ul>${weekendItems(d,H).join("")}</ul></div>`).join("")+`</section>`;
+  b.innerHTML=html;
+  fit();
+}
+function _old(){
+  const H=header(),t=0,wdToday=false,b={};let html="";
   [6,0].forEach((d,i)=>{
     const row=i+2, items=weekendItems(d,H), lab=`<div class="lab pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div>`;
     const cls="seg"+(d===t?" today":"");
@@ -280,7 +309,35 @@ function render(){
   b.innerHTML=html;
   fit();
 }
-function fit(){}
+function fit(){zoomFit(".wcard ul",.6)}
+
+// Weather for Iowa City from Open-Meteo, refreshed every 30 minutes
+const WX={lat:41.661,lon:-91.530};
+const ICONS={
+ sun:'<svg viewBox="0 0 48 48" fill="none" stroke="#c8942e" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="24" r="8" fill="#e6b85c"/><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.6 10.6l4.2 4.2M33.2 33.2l4.2 4.2M10.6 37.4l4.2-4.2M33.2 14.8l4.2-4.2"/></svg>',
+ moon:'<svg viewBox="0 0 48 48"><path d="M30 8a16 16 0 1 0 10 26A13 13 0 0 1 30 8z" fill="#ead9c2" stroke="#72583e" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+ partly:'<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round"><circle cx="18" cy="18" r="7" fill="#e6b85c" stroke="#c8942e" stroke-width="2.5"/><path d="M18 5v3M5 18h3M8.8 8.8l2 2M27.2 8.8l-2 2" stroke="#c8942e" stroke-width="2.5"/><path d="M16 38h20a7 7 0 0 0 0-14 10 10 0 0 0-19 3 5.5 5.5 0 0 0-1 11z" fill="#fff9f3" stroke="#72583e" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+ cloud:'<svg viewBox="0 0 48 48"><path d="M13 36h22a8 8 0 0 0 0-16 11 11 0 0 0-21 3 6.5 6.5 0 0 0-1 13z" fill="#ead9c2" stroke="#72583e" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+ fog:'<svg viewBox="0 0 48 48" fill="none" stroke="#72583e" stroke-width="2.8" stroke-linecap="round"><path d="M10 18h28M6 25h36M10 32h28M14 39h20"/></svg>',
+ rain:'<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round"><path d="M13 29h22a8 8 0 0 0 0-16 11 11 0 0 0-21 3 6.5 6.5 0 0 0-1 13z" fill="#ead9c2" stroke="#72583e" stroke-width="2.5" stroke-linejoin="round"/><path d="M17 34l-2 6M25 34l-2 6M33 34l-2 6" stroke="#6c7f96" stroke-width="2.8"/></svg>',
+ snow:'<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round"><path d="M13 29h22a8 8 0 0 0 0-16 11 11 0 0 0-21 3 6.5 6.5 0 0 0-1 13z" fill="#ead9c2" stroke="#72583e" stroke-width="2.5" stroke-linejoin="round"/><g fill="#72583e"><circle cx="17" cy="37" r="2"/><circle cx="25" cy="40" r="2"/><circle cx="33" cy="37" r="2"/></g></svg>',
+ storm:'<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round"><path d="M13 29h22a8 8 0 0 0 0-16 11 11 0 0 0-21 3 6.5 6.5 0 0 0-1 13z" fill="#ead9c2" stroke="#72583e" stroke-width="2.5" stroke-linejoin="round"/><path d="M26 31l-5 7h6l-4 7" stroke="#c8942e" stroke-width="2.8" stroke-linejoin="round"/></svg>'
+};
+function wxKind(c,day){if(c===0)return day?["sun","Clear"]:["moon","Clear"];if(c<=2)return day?["partly","Partly cloudy"]:["cloud","Partly cloudy"];if(c===3)return["cloud","Cloudy"];if(c===45||c===48)return["fog","Fog"];if(c>=51&&c<=57)return["rain","Drizzle"];if(c>=61&&c<=67)return["rain","Rain"];if(c>=71&&c<=77)return["snow","Snow"];if(c>=80&&c<=82)return["rain","Showers"];if(c===85||c===86)return["snow","Snow showers"];if(c>=95)return["storm","Storms"];return["cloud",""]}
+async function weather(){
+  try{
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=${WX.lat}&longitude=${WX.lon}&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FChicago&forecast_days=1`;
+    const r=await (await fetch(u,{cache:"no-store"})).json();
+    const [k,label]=wxKind(r.current.weather_code,r.current.is_day===1);
+    document.getElementById("wxicon").innerHTML=ICONS[k];
+    document.getElementById("wxtemp").textContent=Math.round(r.current.temperature_2m)+"°";
+    document.getElementById("wxcond").textContent=label;
+    const p=r.daily.precipitation_probability_max[0];
+    document.getElementById("wxday").textContent=`H ${Math.round(r.daily.temperature_2m_max[0])}°  L ${Math.round(r.daily.temperature_2m_min[0])}°${p!=null?`  ·  ${p}% rain`:""}`;
+    document.getElementById("wx").hidden=false;
+  }catch(e){}
+}
+weather();setInterval(weather,30*60*1000);
 // Impressionist pond painted once per screen size, in the latte palette
 function paint(){
   const c=document.getElementById("paint"),w=innerWidth,h=innerHeight;
