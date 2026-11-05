@@ -393,6 +393,7 @@ async function decrypt(blob,pass){
 }
 const store={get(){try{return localStorage.getItem("fw-pass")}catch(e){return null}},set(v){try{localStorage.setItem("fw-pass",v)}catch(e){}}};
 let pass=store.get(), lastCt="";
+{const m=location.hash.match(/k=([^&]+)/);if(m){if(!pass)pass=decodeURIComponent(m[1]).trim().toLowerCase();try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}}
 function status(msg,bad){const el=document.getElementById("lerr");el.textContent=msg;el.hidden=!msg;el.style.color=bad?"":"var(--muted)"}
 async function load(){
   if(!pass){showLock();return}
@@ -414,7 +415,7 @@ setInterval(()=>{if(lastCt)render()},30000);
 
 setInterval(load,10*60*1000);
 setInterval(load,10*60*1000);
-const VERSION="10";
+const VERSION="11";
 async function checkVersion(){try{const v=(await (await fetch("version.txt?t="+Date.now(),{cache:"no-store"})).text()).trim();if(v&&v!==VERSION)location.replace(location.pathname+"?v="+v)}catch(e){}}
 setInterval(checkVersion,10*60*1000);checkVersion();
 setTimeout(()=>{try{location.reload()}catch(e){}},6*60*60*1000);
