@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Family Week</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a living-room wall board — big clock band on top, seven day columns that fill one TV screen; stacks to a list on phones. Dark by design to sit quietly on a TV. */
+:root{
+  color-scheme: dark;
+  --bg:#10151c;
+  --panel:#171e27;
+  --line:#26303c;
+  --fg:#eef2f6;
+  --muted:#8995a3;
+  --p1:#7cc0ff;
+  --p2:#f3bd6b;
+  --both:#cfa6f5;
+  --today:#e9f1fa;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);overflow:hidden}
+.wrap{height:100%;display:grid;grid-template-rows:auto 1fr auto;gap:1.2vw;
+  padding-block:1.6vw 1vw;
+  padding-left:max(16px, 2vw, env(safe-area-inset-left,0px));
+  padding-right:max(16px, 2vw, env(safe-area-inset-right,0px));box-sizing:border-box}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:2vw;flex-wrap:wrap}
+.clock{font-family:var(--display);font-weight:800;font-size:5.2vw;line-height:.9;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.clock small{font-size:.38em;font-weight:500;color:var(--muted);margin-left:.3em;letter-spacing:0}
+.dateline{font-family:var(--display);font-weight:500;font-size:1.6vw;color:var(--muted);margin-top:.4vw}
+.legend{display:flex;gap:1.6vw;font-size:1.15vw;align-items:center;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:.5vw}
+.legend i{width:1vw;height:1vw;border-radius:50%;display:inline-block}
+.legend .wk{color:var(--muted)}
+.legend .wk i{background:transparent;border:2px solid var(--muted);box-sizing:border-box}
+
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.6vw;min-height:0}
+.day{background:var(--panel);border-radius:.6vw;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.day.past{opacity:.42}
+.dh{display:flex;align-items:baseline;gap:.6vw;padding:.8vw .9vw .6vw;border-bottom:1px solid var(--line)}
+.dh b{font-family:var(--display);font-weight:700;font-size:1.25vw;letter-spacing:.08em;text-transform:uppercase}
+.dh em{font-style:normal;font-family:var(--display);font-weight:800;font-size:2.1vw;line-height:1;font-variant-numeric:tabular-nums}
+.dh .tag{margin-left:auto;font-size:.85vw;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.day.today .dh{background:var(--today);color:var(--bg);border-bottom-color:var(--today)}
+.day.today{outline:2px solid var(--today);outline-offset:0}
+
+ul{list-style:none;margin:0;padding:.5vw;display:flex;flex-direction:column;gap:.35vw;min-height:0;flex:1;overflow:hidden}
+.ev{border-radius:.4vw;padding:.45vw .6vw;display:grid;grid-template-columns:auto 1fr;column-gap:.55vw;row-gap:.1vw;align-items:baseline}
+.ev .dot{width:.7vw;height:.7vw;border-radius:50%;grid-row:span 2;align-self:center}
+.ev .tm{font-size:.88vw;color:var(--muted);font-variant-numeric:tabular-nums}
+.ev .ti{grid-column:2;font-size:1.12vw;font-weight:700;line-height:1.22;text-wrap:balance}
+.ev .sub{grid-column:2;font-size:.85vw;color:var(--muted);line-height:1.25}
+.ev.b{background:color-mix(in srgb,var(--p1) 16%,transparent)} .ev.b .dot{background:var(--p1)}
+.ev.w{background:color-mix(in srgb,var(--p2) 14%,transparent)} .ev.w .dot{background:var(--p2)}
+.ev.both{background:color-mix(in srgb,var(--both) 18%,transparent)} .ev.both .dot{background:var(--both)}
+.ev.work{background:transparent;padding-block:.25vw;opacity:.5}
+.ev.work .dot{background:transparent;border:2px solid var(--muted);box-sizing:border-box}
+.ev.work .ti{font-weight:400;font-size:.95vw;color:var(--muted)}
+.ev.work .tm{font-size:.8vw}
+.ev.now{box-shadow:inset 0 0 0 2px var(--fg)}
+.ev .nowtag{font-size:.7vw;font-weight:700;letter-spacing:.1em;background:var(--fg);color:var(--bg);border-radius:.25vw;padding:.05vw .35vw;margin-left:.4vw;vertical-align:.1em}
+.ev.done{opacity:.45}
+.free{color:var(--muted);font-size:1vw;padding:.4vw .6vw}
+
+footer{display:flex;justify-content:space-between;color:var(--muted);font-size:.85vw;gap:1vw;flex-wrap:wrap}
+
+/* Phones and narrow screens: stack days into one scrolling list */
+@media (max-width:760px), (orientation:portrait){
+  body{overflow:auto}
+  html,body{height:auto}
+  .wrap{height:auto;gap:16px;padding-block:16px}
+  .clock{font-size:44px}
+  .dateline{font-size:17px}
+  .legend{font-size:14px;gap:14px}
+  .legend i{width:12px;height:12px}
+  .days{grid-template-columns:1fr;gap:10px}
+  .day{border-radius:10px}
+  .dh{padding:10px 12px 8px;gap:8px}
+  .dh b{font-size:15px}.dh em{font-size:24px}.dh .tag{font-size:11px}
+  ul{padding:8px;gap:5px}
+  .ev{border-radius:7px;padding:7px 10px;column-gap:9px}
+  .ev .dot{width:10px;height:10px}
+  .ev .tm{font-size:13px}.ev .ti{font-size:16px}.ev .sub{font-size:13px}
+  .ev.work .ti{font-size:14px}.ev.work .tm{font-size:12px}.ev.work{padding-block:4px}
+  .ev .nowtag{font-size:10px;padding:1px 5px;border-radius:4px}
+  .free{font-size:14px;padding:6px 10px}
+  footer{font-size:12px}
+}
+.lock{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:5}
+.lock form{display:flex;flex-direction:column;gap:12px;width:min(360px,90vw)}
+.lock label{font-family:var(--display);font-weight:700;font-size:22px}
+.lock input{font:inherit;font-size:20px;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.lock button{font:inherit;font-size:18px;font-weight:700;padding:12px;border-radius:8px;border:0;background:var(--fg);color:var(--bg);cursor:pointer}
+.lock button:focus-visible,.lock input:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
+.lock p{color:var(--p2);margin:0}
+.legend b{font-weight:400}
+
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="clock" id="clock">7:00<small>PM</small></div>
+      <div class="dateline" id="dateline"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--p1)"></i><b id="nb"></b></span>
+      <span><i style="background:var(--p2)"></i><b id="nw"></b></span>
+      <span><i style="background:var(--both)"></i>Both</span>
+      <span class="wk"><i></i>Work</span>
+    </div>
+  </header>
+  <main class="days" id="days"></main>
+  <footer>
+    <span id="weeklabel"></span>
+    <span id="updated"></span>
+  </footer>
+</div>
+<div id="lock" class="lock" hidden>
+  <form id="lf"><label for="pc">Passcode</label>
+  <input id="pc" type="password" autocomplete="current-password">
+  <button>Unlock</button><p id="lerr" hidden>That passcode didn't work. Check it and try again.</p></form>
+</div>
+<script>
+let WEEK={start:"2026-11-01",events:[]};
+
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const mins=s=>{const[h,m]=s.split(":").map(Number);return h*60+m};
+function fmt(s){const m=mins(s),h=Math.floor(m/60),mm=m%60,h12=h%12||12;return {t:h12+(mm?":"+String(mm).padStart(2,"0"):""),ap:h<12?"AM":"PM"}}
+function range(s,e){const a=fmt(s);if(!e)return a.t+" "+a.ap;const b=fmt(e);return a.ap===b.ap?`${a.t}–${b.t} ${b.ap}`:`${a.t} ${a.ap}–${b.t} ${b.ap}`}
+function startDate(){const[y,m,d]=WEEK.start.split("-").map(Number);return new Date(y,m-1,d)}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function render(){
+  const now=new Date(), sd=startDate();
+  const today=Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-sd)/864e5);
+  const nowM=now.getHours()*60+now.getMinutes();
+  const h=now.getHours(), h12=h%12||12;
+  document.getElementById("clock").innerHTML=`${h12}:${String(now.getMinutes()).padStart(2,"0")}<small>${h<12?"AM":"PM"}</small>`;
+  document.getElementById("dateline").textContent=now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+  const end=new Date(sd);end.setDate(end.getDate()+6);
+  document.getElementById("weeklabel").textContent=`Week of ${MONTHS[sd.getMonth()]} ${sd.getDate()} – ${sd.getMonth()===end.getMonth()?"":MONTHS[end.getMonth()]+" "}${end.getDate()}`;
+
+  let html="";
+  for(let d=0;d<7;d++){
+    const dt=new Date(sd);dt.setDate(dt.getDate()+d);
+    const cls=d===today?"today":d<today?"past":"";
+    const evs=WEEK.events.filter(e=>e.d===d).sort((a,b)=>mins(a.s)-mins(b.s)||(a.work?1:0)-(b.work?1:0));
+    const items=evs.map(e=>{
+      const s=mins(e.s),en=e.e?mins(e.e):s+30;
+      const isNow=d===today&&nowM>=s&&nowM<en, done=d===today&&nowM>=en;
+      return `<li class="ev ${e.who}${e.work?" work":""}${isNow?" now":""}${done?" done":""}"><span class="dot"></span><span class="tm">${range(e.s,e.e)}${isNow?'<span class="nowtag">NOW</span>':""}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`;
+    }).join("")||'<li class="free">Nothing planned</li>';
+    html+=`<section class="day ${cls}"><div class="dh"><b>${DAYS[d]}</b><em>${dt.getDate()}</em>${d===today?'<span class="tag">Today</span>':""}</div><ul>${items}</ul></section>`;
+  }
+  document.getElementById("days").innerHTML=html;
+  fit();
+}
+// Shrink a busy day's list until every event fits on screen
+function fit(){
+  if(matchMedia("(max-width:760px), (orientation:portrait)").matches)return;
+  document.querySelectorAll(".day ul").forEach(ul=>{
+    let z=1;ul.style.zoom=1;
+    while(ul.scrollHeight>ul.clientHeight+1&&z>.55){z-=.04;ul.style.zoom=z}
+  });
+}
+addEventListener("resize",fit);
+
+
+// Keep the screen awake when the browser allows it
+async function wake(){try{await navigator.wakeLock?.request("screen")}catch(e){}}
+wake();document.addEventListener("visibilitychange",()=>{if(!document.hidden)wake()});
+// Fallback refresh every 2 hours in case an update was missed
+setTimeout(()=>{try{location.reload()}catch(e){}},2*60*60*1000);
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decrypt(blob,pass){
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:b64(blob.salt),iterations:blob.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(blob.iv)},key,b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+const store={get(){try{return localStorage.getItem("fw-pass")}catch(e){return null}},set(v){try{localStorage.setItem("fw-pass",v)}catch(e){}}};
+let pass=store.get(), lastCt="";
+async function load(){
+  if(!pass){showLock();return}
+  try{
+    const blob=await (await fetch("cal.json?t="+Date.now(),{cache:"no-store"})).json();
+    if(blob.ct===lastCt)return;
+    WEEK=await decrypt(blob,pass); lastCt=blob.ct;
+    document.getElementById("nb").textContent=WEEK.names.b;
+    document.getElementById("nw").textContent=WEEK.names.w;
+    document.getElementById("updated").textContent="Updated "+WEEK.updated;
+    document.getElementById("lock").hidden=true; render(); store.set(pass);
+  }catch(e){ if(!lastCt){pass=null;showLock(true)} }
+}
+function showLock(bad){document.getElementById("lock").hidden=false;document.getElementById("lerr").hidden=!bad;document.getElementById("pc").focus()}
+document.getElementById("lf").addEventListener("submit",ev=>{ev.preventDefault();pass=document.getElementById("pc").value.trim();load()});
+load();
+setInterval(()=>{if(lastCt)render()},30000);
+setInterval(load,10*60*1000);
+</script>
+</body></html>
