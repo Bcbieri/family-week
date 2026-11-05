@@ -232,7 +232,7 @@ function render(){
     const all=dayEvents(d), ev=all.filter(e=>!e.work);
     let inner="";
     for(let m=T0+60;m<T1;m+=60)inner+=`<div class="hr" style="top:${pct(m)}%"></div>`;
-    all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}${(en-s)<75?" tiny":""}" style="top:calc(${pct(s)}% + .15vw);height:calc(${pct(en)-pct(s)}% - .3vw)"><span>${esc(place(e))}</span></div>`});
+    all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}${(en-s)<75?" tiny":""}" style="top:calc(${pct(s)}% + .1vw);height:calc(${pct(en)-pct(s)}% - .2vw)"><span>${esc(place(e))}</span></div>`});
     ev.forEach(e=>{
       const s=mins(e.s),en=e.e?mins(e.e):s+30;
       const clash=ev.some(o=>o!==e&&o.who!==e.who&&e.who!=="both"&&o.who!=="both"&&mins(o.s)<en&&(o.e?mins(o.e):mins(o.s)+30)>s);
