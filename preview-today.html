@@ -206,10 +206,12 @@ function header(){
   const now=new Date(), sd=startDate(), h=now.getHours();
   document.getElementById("clock").innerHTML=`${h%12||12}:${String(now.getMinutes()).padStart(2,"0")}<small>${h<12?"AM":"PM"}</small>`;
   document.getElementById("dateline").textContent=now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
-  const end=new Date(sd);end.setDate(end.getDate()+6);
-  document.getElementById("weeklabel").textContent=`Week of ${MONTHS[sd.getMonth()]} ${sd.getDate()} – ${sd.getMonth()===end.getMonth()?"":MONTHS[end.getMonth()]+" "}${end.getDate()}`;
-  const today=Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-sd)/864e5);
-  return {now,sd,today,nowM:h*60+now.getMinutes(),date:d=>{const x=new Date(sd);x.setDate(x.getDate()+d);return x.getDate()},tag:d=>d===today?'<span class="tag">Today</span>':""};
+  // The week shown runs Monday to Sunday; Sunday is the day after Saturday
+  const mon=new Date(sd);mon.setDate(mon.getDate()+1);const end=new Date(sd);end.setDate(end.getDate()+7);
+  document.getElementById("weeklabel").textContent=`Week of ${MONTHS[mon.getMonth()]} ${mon.getDate()} – ${mon.getMonth()===end.getMonth()?"":MONTHS[end.getMonth()]+" "}${end.getDate()}`;
+  const raw=Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-sd)/864e5);
+  const today=raw===7?0:(raw>=1&&raw<=6?raw:-1);
+  return {now,sd,today,nowM:h*60+now.getMinutes(),date:d=>{const x=new Date(sd);x.setDate(x.getDate()+(d===0?7:d));return x.getDate()},tag:d=>d===today?'<span class="tag">Today</span>':""};
 }
 function zoomFit(sel,min){
   if(matchMedia("(max-width:760px), (orientation:portrait)").matches)return;
