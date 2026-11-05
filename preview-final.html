@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Family Week</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: clock top-left; Monday–Friday as five tall columns; Saturday and Sunday as two long ribbons along the bottom; all laid over a painted impressionist pond. */
+:root{
+  color-scheme: light;
+  --bg:#dbc4a5; --panel:rgba(255,249,243,.95); --panel-solid:#fff9f3; --line:#e8dccb;
+  --fg:#443223; --muted:#72583e;
+  --p1:#6c6a51; --p2:#755151; --both:#72583e; --today:#44422d;
+  --on:#fff9f3; --on-soft:#ead9c2;
+  --display:"Cormorant Garamond", Garamond, "Times New Roman", serif;
+  --body:"Source Serif 4", Georgia, serif;
+  --mono:"DM Mono", ui-monospace, Menlo, monospace;
+  --shadow:0 .3vw 1.4vw rgba(52,38,26,.28);
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);overflow:hidden}
+#paint{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.wrap{position:relative;z-index:1;height:100%;box-sizing:border-box;padding-block:1.2vw;
+  padding-left:max(16px, 1.8vw, env(safe-area-inset-left,0px));padding-right:max(16px, 1.8vw, env(safe-area-inset-right,0px));
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:.8vw}
+.pill{background:var(--panel);border-radius:.9vw;box-shadow:var(--shadow)}
+
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:1.5vw}
+.plate{padding:.8vw 1.4vw .9vw}
+.clock{font-family:var(--display);font-weight:600;font-size:5vw;line-height:.85;font-variant-numeric:lining-nums tabular-nums}
+.clock small{font-size:.34em;font-weight:500;color:var(--muted);margin-left:.25em;letter-spacing:.04em}
+.dateline{font-family:var(--display);font-style:italic;font-weight:500;font-size:1.7vw;color:var(--muted);margin-top:.2vw}
+.key{padding:.8vw 1.2vw;display:flex;flex-direction:column;gap:.6vw;align-items:flex-end}
+.legend{display:flex;gap:1.4vw;font-family:var(--mono);font-size:1.05vw;letter-spacing:.06em;text-transform:uppercase;flex-wrap:wrap;justify-content:flex-end}
+.legend span{display:flex;align-items:center;gap:.5vw}
+.legend i{width:1.4vw;height:.95vw;border-radius:.25vw;display:inline-block}
+.legend .wk{color:var(--muted)} .legend .wk i{width:.95vw;border-radius:50%;border:2px solid var(--muted);box-sizing:border-box}
+.meta{font-family:var(--mono);font-size:.85vw;letter-spacing:.05em;color:var(--muted);display:flex;gap:1.5vw}
+
+.weekdays{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.8vw;min-height:0}
+.col{display:flex;flex-direction:column;gap:.5vw;min-height:0;min-width:0}
+.dh{display:flex;align-items:baseline;gap:.6vw;padding:.5vw 1vw .4vw}
+.dh b{font-family:var(--mono);font-weight:500;font-size:1.1vw;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.dh em{font-style:normal;font-family:var(--display);font-weight:700;font-size:2.4vw;line-height:1;font-variant-numeric:lining-nums}
+.dh .tag{margin-left:auto;font-family:var(--mono);font-size:.72vw;letter-spacing:.14em;text-transform:uppercase}
+.today .dh,.today .lab{background:var(--today);color:var(--on)}
+.today .dh b,.today .lab b{color:var(--on-soft)}
+
+ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
+.col ul{flex-direction:column;flex:1;min-height:0;overflow:hidden;padding-bottom:.6vw}
+.ev{box-sizing:border-box;border-radius:.55vw;box-shadow:0 .25vw .9vw rgba(52,38,26,.35);padding:.5vw .75vw;display:grid;grid-template-columns:auto 1fr;column-gap:.5vw;row-gap:.1vw;align-items:baseline;color:var(--on)}
+.ev .dot{width:.6vw;height:.6vw;border-radius:50%;grid-row:span 2;align-self:center;background:var(--on-soft)}
+.ev .tm{font-family:var(--mono);font-weight:500;font-size:.92vw;letter-spacing:.02em}
+.ev .ti{grid-column:2;font-size:1.3vw;font-weight:600;line-height:1.18;text-wrap:balance}
+.ev .sub{grid-column:2;font-size:.95vw;font-style:italic;line-height:1.2;color:var(--on-soft)}
+.ev.b{background:var(--p1)} .ev.w{background:var(--p2)} .ev.both{background:var(--both)}
+.ev.work .dot{background:transparent;border:2px solid var(--on-soft);box-sizing:border-box}
+.ev.now{box-shadow:0 0 0 2px var(--panel-solid),0 0 0 4px var(--fg),0 .25vw .9vw rgba(52,38,26,.35)}
+.ev .nowtag{font-family:var(--mono);font-size:.62vw;letter-spacing:.1em;background:var(--on);color:var(--fg);border-radius:.25vw;padding:.05vw .35vw;margin-left:.4vw;vertical-align:.1em}
+.free{color:var(--muted);font-style:italic;font-size:1.1vw;padding:.5vw .9vw;background:var(--panel);border-radius:.55vw;box-shadow:var(--shadow)}
+
+.weekend{display:flex;flex-direction:column;gap:.6vw}
+.row{display:grid;grid-template-columns:9vw minmax(0,1fr);gap:.6vw;align-items:stretch}
+.lab{display:flex;align-items:baseline;justify-content:flex-start;gap:.6vw;padding:.5vw 1vw}
+.lab b{font-family:var(--mono);font-weight:500;font-size:1.1vw;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lab em{font-style:normal;font-family:var(--display);font-weight:700;font-size:2.4vw;line-height:1;font-variant-numeric:lining-nums}
+.lab .tag{font-family:var(--mono);font-size:.7vw;letter-spacing:.14em;text-transform:uppercase}
+.lab{align-items:center}
+.row ul{flex-wrap:wrap;align-items:stretch}
+.row .ev{flex:0 0 15vw}
+
+
+.legend .wk i.wkband{width:1.4vw;height:.95vw;border-radius:.25vw;border:0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p2) 30%,var(--panel-solid)) 0 .25vw,var(--panel-solid) .25vw .5vw);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p2) 35%,transparent)}
+.strip{display:flex;gap:.5vw;align-items:baseline;flex-wrap:wrap;font-size:1vw;line-height:1.35;color:var(--fg)}
+.strip b{font-family:var(--mono);font-weight:500;font-size:.78vw;letter-spacing:.12em;text-transform:uppercase;color:var(--on);background:var(--p2);border-radius:.25vw;padding:.05vw .4vw}
+.strip.b b{background:var(--p1)}
+.strip i{font-style:italic;color:var(--muted)} .strip em{font-style:normal;color:var(--muted)}
+.strip span{font-family:var(--mono);font-size:.88vw}
+.strip span i{font-family:var(--body);font-size:1vw}
+.row .strip.pill{padding:.5vw .8vw;align-self:center;max-width:40vw}
+.line{display:grid;grid-template-columns:.85vw minmax(0,1fr);column-gap:.6vw;row-gap:.05vw;align-items:baseline;padding:.5vw .3vw;border-top:1px solid var(--line)}
+.line .sw{width:.8vw;height:.8vw;border-radius:50%;grid-row:span 3;align-self:start;margin-top:.35vw}
+.line .tm{font-family:var(--mono);font-weight:500;font-size:.95vw;color:var(--muted)}
+.line .ti{grid-column:2;font-size:1.4vw;font-weight:600;line-height:1.18;text-wrap:balance}
+.line .sub{grid-column:2;font-size:.95vw;font-style:italic;color:var(--muted)}
+.line.now{background:color-mix(in srgb,var(--today) 10%,transparent);border-radius:.4vw}
+.line .nowtag{font-family:var(--mono);font-size:.62vw;letter-spacing:.1em;background:var(--fg);color:var(--on);border-radius:.25vw;padding:.05vw .35vw;margin-left:.4vw;vertical-align:.1em}
+.card{background:var(--panel);border-radius:.9vw;box-shadow:var(--shadow);padding:.5vw .9vw;min-height:0;overflow:hidden;flex:1;display:flex;flex-direction:column}
+.card ul{flex-direction:column;gap:0;flex:1;min-height:0;overflow:hidden}
+.card .strip{padding:.3vw .3vw .55vw}
+
+.weekdays{display:grid;grid-template-columns:3.4vw repeat(5,minmax(0,1fr));gap:.7vw;min-height:0}
+.col{display:flex;flex-direction:column;gap:.5vw;min-height:0;min-width:0}
+.axis .dh{visibility:hidden}
+.tg{position:relative;flex:1;min-height:0;background:var(--panel);border-radius:.9vw;box-shadow:var(--shadow);overflow:hidden}
+.axis .tg{background:transparent;box-shadow:none;overflow:visible}
+.hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.axis .hr{border:0}
+.axis .hr span{position:absolute;right:.2vw;top:-.65vw;font-family:var(--mono);font-size:.82vw;font-weight:500;color:var(--fg);background:var(--panel);border-radius:.3vw;padding:0 .3vw;white-space:nowrap}
+.band{position:absolute;left:.25vw;right:.25vw;border-radius:.5vw;
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p2) 13%,transparent) 0 .55vw,color-mix(in srgb,var(--p2) 6%,transparent) .55vw 1.1vw);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p2) 22%,transparent)}
+.band.b{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p1) 14%,transparent) 0 .55vw,color-mix(in srgb,var(--p1) 6%,transparent) .55vw 1.1vw);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p1) 24%,transparent)}
+.band span{position:absolute;right:.2vw;top:.35vw;writing-mode:vertical-rl;font-family:var(--mono);font-weight:500;font-size:.78vw;letter-spacing:.12em;text-transform:uppercase;color:var(--p2);white-space:nowrap;overflow:hidden;max-height:calc(100% - .7vw);background:var(--panel-solid);border-radius:.3vw;padding:.3vw .1vw}
+.band.b span{color:var(--p1)}
+.band.tiny span{display:none}
+.blk{position:absolute;left:.5vw;right:1.9vw;border-radius:.45vw;padding:.22vw .55vw;overflow:hidden;color:var(--on);box-shadow:0 .2vw .7vw rgba(52,38,26,.35);box-sizing:border-box;display:flex;flex-direction:column;gap:.05vw}
+.blk.b{background:var(--p1)}.blk.w{background:var(--p2)}.blk.both{background:var(--both)}
+.blk.L{right:calc(50% + .25vw)}.blk.R{left:calc(50% - 1.4vw)}
+.blk .tm{font-family:var(--mono);font-weight:500;font-size:.82vw;color:var(--on-soft)}
+.blk .ti{font-size:1.1vw;font-weight:600;line-height:1.15}
+.blk.mid .ti{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:1.02vw}.blk.mid .tm{font-size:.76vw}
+.blk .sub{font-size:.85vw;font-style:italic;color:var(--on-soft);line-height:1.15}
+.blk.short{flex-direction:row;align-items:baseline;gap:.4vw;padding-block:.15vw;white-space:nowrap}
+.blk.short .ti{overflow:hidden;text-overflow:ellipsis;font-size:1.02vw}
+.blk.short .tm{font-size:.78vw}
+.nowline{position:absolute;left:0;right:0;height:0;border-top:2px solid var(--fg);z-index:3}
+.nowline::before{content:"";position:absolute;left:-.1vw;top:-.45vw;width:.8vw;height:.8vw;border-radius:50%;background:var(--fg)}
+.weekend{display:flex;flex-direction:column;gap:.6vw}
+
+.board{display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:.7vw .7vw;min-height:0}
+.seg{display:flex;flex-wrap:wrap;gap:.5vw;align-items:stretch;align-content:center;min-width:0}
+.seg .lab{flex:none;padding:.45vw 1vw}
+.seg .lab.cont{padding:.45vw .8vw;opacity:.9}.seg .lab .arrow{font-family:var(--display);font-style:italic;font-size:1.1vw;color:var(--muted)}
+.seg .ev{flex:1 1 11vw;max-width:17vw}
+.seg .strip.pill{padding:.45vw .8vw;align-self:center}
+.col.today .blk .ti{font-size:1.45vw}
+.col.today .blk .tm{font-size:1vw}
+.col.today .blk .sub{font-size:1.05vw}
+.col.today .blk.short{align-items:center;gap:.7vw}.col.today .blk.short .ti{font-size:1.35vw}.col.today .blk.short .tm{font-size:.95vw}
+.col.today .blk.xs .ti{font-size:1.15vw}.col.today .blk.xs .tm{font-size:.85vw}
+.col.today .band span{font-size:.9vw}
+.col.today .dh em{font-size:3vw}.col.today .dh b{font-size:1.35vw}
+.seg.today .ev .ti{font-size:1.6vw}.seg.today .lab em{font-size:3vw}
+
+@media (max-width:760px), (orientation:portrait){
+  body{overflow:auto} html,body{height:auto}
+  .wrap{height:auto;display:flex;flex-direction:column;gap:12px;padding-block:14px}
+  .top{flex-direction:column;align-items:stretch;gap:10px}
+  .plate,.key,.card,.tg,.dh,.lab,.pill{border-radius:12px}.plate{padding:14px 16px}.key{align-items:flex-start;padding:12px 16px}
+  .clock{font-size:46px}.dateline{font-size:19px}
+  .legend{font-size:12px;gap:8px 16px;justify-content:flex-start}.legend i,.legend .wk i.wkband{width:16px;height:11px}
+  .meta{font-size:11px}
+  .weekdays,.split,.right,.others{display:flex!important;flex-direction:column;gap:12px}
+  .dh,.lab{padding:8px 12px}.dh b,.lab b{font-size:12px}.dh em,.lab em{font-size:24px}.dh .tag,.lab .tag{font-size:10px}
+  .row{grid-template-columns:1fr;gap:6px}
+  .ev{border-radius:8px;padding:7px 10px;column-gap:8px;flex:1 1 150px!important}.ev .dot{width:8px;height:8px}.ev .tm{font-size:12px}.ev .ti{font-size:16px}.ev .sub{font-size:13px}
+  .line{grid-template-columns:12px 1fr;column-gap:8px;padding:8px 4px}.line .sw{width:10px;height:10px;margin-top:4px}.line .tm{font-size:12px}.line .ti{font-size:17px}.line .sub{font-size:13px}
+  .strip{font-size:14px}.strip b{font-size:10px}.strip span{font-size:12px}.strip span i{font-size:14px}
+  .card{padding:6px 12px}.free{font-size:14px}
+  .tg{height:520px;flex:none}.axis{display:none}
+  .blk .ti{font-size:13px}.blk .tm{font-size:10px}.band span{font-size:9px}
+  .today-big .line .ti{font-size:20px}
+}
+[hidden]{display:none!important}
+.lock{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:5}
+.lock form{display:flex;flex-direction:column;gap:12px;width:min(360px,90vw)}
+.lock label{font-family:var(--display);font-weight:700;font-size:22px}
+.lock input{font:inherit;font-size:20px;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.lock button{font:inherit;font-size:18px;font-weight:700;padding:12px;border-radius:8px;border:0;background:var(--fg);color:var(--bg);cursor:pointer}
+.lock button:focus-visible,.lock input:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
+.lock p{color:var(--p2);margin:0}
+.legend b{font-weight:400}
+
+</style>
+</head><body>
+<canvas id="paint" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header class="top">
+    <div class="plate pill"><div class="clock" id="clock"></div><div class="dateline" id="dateline"></div></div>
+    <div class="key pill">
+      <div class="legend">
+        <span><i style="background:var(--p1)"></i><b id="nb"></b></span>
+        <span><i style="background:var(--p2)"></i><b id="nw"></b></span>
+        <span><i style="background:var(--both)"></i>Both</span>
+        <span class="wk"><i class="wkband"></i>Work</span>
+      </div>
+      <div class="meta"><span id="weeklabel"></span><span id="updated"></span></div>
+    </div>
+  </header>
+  <main class="board" id="board"></main>
+</div>
+<div id="lock" class="lock" hidden>
+  <form id="lf"><label for="pc">Passcode</label>
+  <input id="pc" type="password" autocomplete="current-password">
+  <button>Unlock</button><p id="lerr" hidden>That passcode didn't work. Check it and try again.</p></form>
+</div>
+<script>
+let WEEK={start:"2026-11-01",events:[]};
+
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const mins=s=>{const[h,m]=s.split(":").map(Number);return h*60+m};
+function fmt(s){const m=mins(s),h=Math.floor(m/60),mm=m%60,h12=h%12||12;return {t:h12+(mm?":"+String(mm).padStart(2,"0"):""),ap:h<12?"AM":"PM"}}
+function range(s,e){const a=fmt(s);if(!e)return a.t+" "+a.ap;const b=fmt(e);return a.ap===b.ap?`${a.t}–${b.t} ${b.ap}`:`${a.t} ${a.ap}–${b.t} ${b.ap}`}
+function startDate(){const[y,m,d]=WEEK.start.split("-").map(Number);return new Date(y,m-1,d)}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+
+
+const C={b:"var(--p1)",w:"var(--p2)",both:"var(--both)"};
+function dayEvents(d){return WEEK.events.filter(e=>e.d===d).sort((a,b)=>mins(a.s)-mins(b.s))}
+const place=e=>e.t.replace(/^Work · /,"").replace(/^Field Experience · (.*)/,"field · $1");
+function strips(list,cls){
+  const by={};list.filter(e=>e.work).forEach(e=>{(by[e.who]=by[e.who]||[]).push(e)});
+  return Object.keys(by).map(k=>`<li class="${cls} ${k}"><b>Work</b><span>${by[k].map(e=>`${range(e.s,e.e)} <i>${esc(place(e))}</i>`).join('<em> · </em>')}</span></li>`).join("");
+}
+function line(e,d,today,nowM){
+  const s=mins(e.s),en=e.e?mins(e.e):s+30,isNow=d===today&&nowM>=s&&nowM<en;
+  return `<li class="line ${e.who}${isNow?" now":""}"><span class="sw" style="background:${C[e.who]}"></span><span class="tm">${range(e.s,e.e)}${isNow?'<span class="nowtag">NOW</span>':""}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`;
+}
+function agenda(d,today,nowM){
+  const all=dayEvents(d), ev=all.filter(e=>!e.work);
+  return strips(all,"strip")+(ev.map(e=>line(e,d,today,nowM)).join("")||(all.length?"":'<li class="free">Nothing planned</li>'));
+}
+function chips(d,today,nowM){
+  const all=dayEvents(d), ev=all.filter(e=>!e.work);
+  const c=ev.map(e=>{const s=mins(e.s),en=e.e?mins(e.e):s+30,isNow=d===today&&nowM>=s&&nowM<en;
+    return `<li class="ev ${e.who}${isNow?" now":""}"><span class="dot"></span><span class="tm">${range(e.s,e.e)}${isNow?'<span class="nowtag">NOW</span>':""}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`}).join("");
+  return c+strips(all,"strip pill")||'<li class="free">Nothing planned</li>';
+}
+function header(){
+  const now=new Date(), sd=startDate(), h=now.getHours();
+  document.getElementById("clock").innerHTML=`${h%12||12}:${String(now.getMinutes()).padStart(2,"0")}<small>${h<12?"AM":"PM"}</small>`;
+  document.getElementById("dateline").textContent=now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+  const end=new Date(sd);end.setDate(end.getDate()+6);
+  document.getElementById("weeklabel").textContent=`Week of ${MONTHS[sd.getMonth()]} ${sd.getDate()} – ${sd.getMonth()===end.getMonth()?"":MONTHS[end.getMonth()]+" "}${end.getDate()}`;
+  const today=Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-sd)/864e5);
+  return {now,sd,today,nowM:h*60+now.getMinutes(),date:d=>{const x=new Date(sd);x.setDate(x.getDate()+d);return x.getDate()},tag:d=>d===today?'<span class="tag">Today</span>':""};
+}
+function zoomFit(sel,min){
+  if(matchMedia("(max-width:760px), (orientation:portrait)").matches)return;
+  document.querySelectorAll(sel).forEach(el=>{let k=1;el.style.zoom=1;while(el.scrollHeight>el.clientHeight+1&&k>min){k-=.03;el.style.zoom=k}});
+}
+
+let T0=8*60,T1=20*60;const pct=m=>Math.max(0,Math.min(100,(m-T0)/(T1-T0)*100));
+function span(){const w=WEEK.events.filter(e=>e.d>=1&&e.d<=5);if(!w.length)return;T0=Math.floor(Math.min(...w.map(e=>mins(e.s)))/60)*60;T1=Math.ceil(Math.max(...w.map(e=>e.e?mins(e.e):mins(e.s)+30))/60)*60;}
+function column(d,H){
+  const all=dayEvents(d), ev=all.filter(e=>!e.work), big=d===H.today;
+  let inner="";
+  for(let m=T0+60;m<T1;m+=60)inner+=`<div class="hr" style="top:${pct(m)}%"></div>`;
+  all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}${(en-s)<75?" tiny":""}" style="top:${pct(s)}%;height:${pct(en)-pct(s)}%"><span>${esc(place(e))}</span></div>`});
+  ev.forEach(e=>{
+    const s=mins(e.s),en=e.e?mins(e.e):s+30, len=en-s;
+    const clash=ev.some(o=>o!==e&&o.who!==e.who&&e.who!=="both"&&o.who!=="both"&&mins(o.s)<en&&(o.e?mins(o.e):mins(o.s)+30)>s);
+    const lane=clash?(e.who==="b"?" R":" L"):"";
+    const size=big?(len<75?" short"+(len<=30?" xs":""):""):(len<50?" short":len<100?" mid":"");
+    const isNow=big&&H.nowM>=s&&H.nowM<en;
+    inner+=`<div class="blk ${e.who}${lane}${size}" style="top:${pct(s)}%;height:${pct(en)-pct(s)}%;${isNow?"outline:2px solid var(--fg);outline-offset:1px;":""}"><span class="tm">${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub&&!size?`<span class="sub">${esc(e.sub)}</span>`:""}</div>`;
+  });
+  if(big&&H.nowM>T0&&H.nowM<T1)inner+=`<div class="nowline" style="top:${pct(H.nowM)}%"></div>`;
+  return `<div class="dh pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div><div class="tg">${inner}</div>`;
+}
+function weekendItems(d,H){
+  const all=dayEvents(d), ev=all.filter(e=>!e.work);
+  const out=ev.map(e=>{const s=mins(e.s),en=e.e?mins(e.e):s+30,isNow=d===H.today&&H.nowM>=s&&H.nowM<en;
+    return `<li class="ev ${e.who}${isNow?" now":""}"><span class="dot"></span><span class="tm">${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`});
+  const st=strips(all,"strip pill"); if(st)out.push(st);
+  if(!out.length)out.push('<li class="free">Nothing planned</li>');
+  return out;
+}
+function render(){
+  const H=header();span();
+  const t=H.today, wdToday=t>=1&&t<=5;
+  const b=document.getElementById("board");
+  b.style.gridTemplateColumns=[1,2,3,4,5].map(d=>d===t?"minmax(0,2fr)":"minmax(0,1fr)").join(" ");
+  let html="";
+  for(let d=1;d<=5;d++)html+=`<section class="col${d===t?" today":""}" style="grid-column:${d};grid-row:${d===t?"1 / span 3":"1"}">${column(d,H)}</section>`;
+  [6,0].forEach((d,i)=>{
+    const row=i+2, items=weekendItems(d,H), lab=`<div class="lab pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div>`;
+    const cls="seg"+(d===t?" today":"");
+    if(!wdToday){html+=`<ul class="${cls}" style="grid-column:1 / span 5;grid-row:${row}">${lab}${items.join("")}</ul>`;return}
+    const before=t-1, after=5-t;
+    const cap=before?(after?Math.max(1,Math.floor((before*15.3-7)/11.5)):items.length):0;
+    const L=items.slice(0,cap), R=items.slice(cap);
+    const cont=before&&R.length?`<div class="lab pill cont"><b>${DAYS[d]}</b><span class="arrow">cont.</span></div>`:"";
+    if(before)html+=`<ul class="${cls}" style="grid-column:1 / span ${before};grid-row:${row}">${lab}${L.join("")}</ul>`;
+    if(after)html+=`<ul class="${cls}" style="grid-column:${t+1} / span ${after};grid-row:${row}">${before?cont:lab}${R.join("")}</ul>`;
+  });
+  b.innerHTML=html;
+  fit();
+}
+function fit(){}
+// Impressionist pond painted once per screen size, in the latte palette
+function paint(){
+  const c=document.getElementById("paint"),w=innerWidth,h=innerHeight;
+  c.width=w;c.height=h;const x=c.getContext("2d");
+  let seed=1874;const R=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const pick=a=>a[Math.floor(R()*a.length)], sc=Math.max(w,h)/1920;
+  const g=x.createLinearGradient(0,0,0,h);
+  [[0,"#efe2cd"],[.3,"#e4d0b4"],[.42,"#b8ab8b"],[.5,"#cfb99c"],[1,"#c4a78b"]].forEach(([o,col])=>g.addColorStop(o,col));
+  x.fillStyle=g;x.fillRect(0,0,w,h);
+  x.lineCap="round";
+  const dab=(px,py,len,wid,ang,col,a)=>{const dx=Math.cos(ang)*len/2,dy=Math.sin(ang)*len/2;x.globalAlpha=a;x.strokeStyle=col;x.lineWidth=wid;x.beginPath();x.moveTo(px-dx,py-dy);x.lineTo(px+dx,py+dy);x.stroke()};
+  const sky=["#efe0c9","#e2c9a8","#d6bc98","#c9c4bb","#b9c2c0","#e2bfb0","#f3e6d4","#cdb6a8"];
+  const trees=["#8f8c6e","#7c7960","#a39e80","#6e6b52","#b2a888","#9b8e84","#5f5d43"];
+  const water=["#cfb391","#c0a083","#ad9592","#9aa7a3","#dcc6aa","#a08670","#b4968e","#8f9c94","#c7b8a6"];
+  const pads=["#6c6a51","#7c7960","#8b8d6b","#5c5a3e","#949878"];
+  const blooms=["#e8b9b1","#f3ddd2","#d79a9a","#fff3e6","#c98d8f"];
+  const H=h*.4, edge=px=>H-h*(.05+.035*Math.sin(px/w*7.3)+.02*Math.sin(px/w*17+1)+.015*Math.sin(px/w*31+2));
+  let n=Math.floor(w*h/110);
+  for(let i=0;i<n;i++){const px=R()*w,py=R()*H*1.05;dab(px,py,(16+R()*34)*sc,(5+R()*9)*sc,(R()-.5)*1.3,pick(sky),.4)}
+  n=Math.floor(w*h/160);
+  for(let i=0;i<n;i++){const px=R()*w,top=edge(px),py=top+R()*(H+h*.06-top);dab(px,py,(10+R()*22)*sc,(5+R()*8)*sc,-1.57+(R()-.5)*1.4,pick(trees),.55)}
+  n=Math.floor(w*h/70);
+  for(let i=0;i<n;i++){
+    const py=H+R()*(h-H),px=R()*w,depth=(py-H)/(h-H);
+    const col=(depth<.28&&R()<.55)?pick(trees):pick(water);
+    dab(px,py,(18+R()*50)*sc*(.5+depth),(3+R()*7)*sc*(.6+depth*.7),(R()-.5)*.25,col,.38)
+  }
+  for(let k=0;k<34;k++){
+    const depth=.15+R()*.85,cy=H+depth*(h-H),cx=R()*w,rad=(40+R()*90)*sc*(.4+depth);
+    for(let i=0;i<55;i++){const a=R()*6.283,r=R()*rad;dab(cx+Math.cos(a)*r,cy+Math.sin(a)*r*.32,(8+R()*16)*sc*(.5+depth),(4+R()*6)*sc*(.5+depth),(R()-.5)*.6,pick(pads),.5)}
+    const bn=Math.floor(R()*4);
+    for(let i=0;i<bn;i++){const a=R()*6.283,r=R()*rad*.6,bx=cx+Math.cos(a)*r,by=cy+Math.sin(a)*r*.32;for(let j=0;j<7;j++)dab(bx+(R()-.5)*10*sc,by+(R()-.5)*5*sc,(5+R()*7)*sc,(4+R()*4)*sc*(.6+depth),R()*3,pick(blooms),.7)}
+  }
+  for(let i=0;i<Math.floor(w*h/2600);i++){const py=H+R()*(h-H)*.7,px=R()*w;dab(px,py,(6+R()*18)*sc,(2+R()*3)*sc,(R()-.5)*.15,"#fff6ea",.45)}
+  x.globalAlpha=1;
+  const v=x.createRadialGradient(w/2,h/2,Math.min(w,h)*.35,w/2,h/2,Math.max(w,h)*.75);
+  v.addColorStop(0,"rgba(68,50,35,0)");v.addColorStop(1,"rgba(68,50,35,.22)");x.fillStyle=v;x.fillRect(0,0,w,h);
+}
+paint();
+try{document.fonts.ready.then(()=>fit());document.fonts.addEventListener("loadingdone",()=>fit())}catch(e){}
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{paint();fit()},250)});
+async function wake(){try{await navigator.wakeLock?.request("screen")}catch(e){}}
+wake();
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decrypt(blob,pass){
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:b64(blob.salt),iterations:blob.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(blob.iv)},key,b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+const store={get(){try{return localStorage.getItem("fw-pass")}catch(e){return null}},set(v){try{localStorage.setItem("fw-pass",v)}catch(e){}}};
+let pass=store.get(), lastCt="";
+function status(msg,bad){const el=document.getElementById("lerr");el.textContent=msg;el.hidden=!msg;el.style.color=bad?"":"var(--muted)"}
+async function load(){
+  if(!pass){showLock();return}
+  if(!window.crypto||!crypto.subtle){status("This browser can't unlock the calendar. Open it with https:// at the start of the address.",true);showLock(true,true);return}
+  try{
+    const blob=await (await fetch("cal.json?t="+Date.now(),{cache:"no-store"})).json();
+    if(blob.ct===lastCt)return;
+    WEEK=await decrypt(blob,pass); lastCt=blob.ct;
+    document.getElementById("nb").textContent=WEEK.names.b;
+    document.getElementById("nw").textContent=WEEK.names.w;
+    document.getElementById("updated").textContent="Updated "+WEEK.updated;
+    document.getElementById("lock").hidden=true; render(); store.set(pass);
+  }catch(e){ if(!lastCt){pass=null;status(e&&e.name==="OperationError"?"That passcode didn't work. Check it and try again.":"Couldn't load the calendar ("+((e&&e.message)||e)+"). Try again.",true);showLock(true,true)} }
+}
+function showLock(bad,keep){document.getElementById("lock").hidden=false;if(!keep)status("");document.getElementById("pc").focus()}
+document.getElementById("lf").addEventListener("submit",ev=>{ev.preventDefault();pass=document.getElementById("pc").value.trim().toLowerCase();status("Unlocking…");load()});
+load();
+setInterval(()=>{if(lastCt)render()},30000);
+
+setInterval(load,10*60*1000);
+setInterval(load,10*60*1000);
+</script>
+</body></html>
