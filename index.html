@@ -185,8 +185,10 @@ async function decrypt(blob,pass){
 }
 const store={get(){try{return localStorage.getItem("fw-pass")}catch(e){return null}},set(v){try{localStorage.setItem("fw-pass",v)}catch(e){}}};
 let pass=store.get(), lastCt="";
+function status(msg,bad){const el=document.getElementById("lerr");el.textContent=msg;el.hidden=!msg;el.style.color=bad?"":"var(--muted)"}
 async function load(){
   if(!pass){showLock();return}
+  if(!window.crypto||!crypto.subtle){status("This browser can't unlock the calendar. Open it with https:// at the start of the address.",true);showLock(true,true);return}
   try{
     const blob=await (await fetch("cal.json?t="+Date.now(),{cache:"no-store"})).json();
     if(blob.ct===lastCt)return;
@@ -195,10 +197,10 @@ async function load(){
     document.getElementById("nw").textContent=WEEK.names.w;
     document.getElementById("updated").textContent="Updated "+WEEK.updated;
     document.getElementById("lock").hidden=true; render(); store.set(pass);
-  }catch(e){ if(!lastCt){pass=null;showLock(true)} }
+  }catch(e){ if(!lastCt){pass=null;status(e&&e.name==="OperationError"?"That passcode didn't work. Check it and try again.":"Couldn't load the calendar ("+((e&&e.message)||e)+"). Try again.",true);showLock(true,true)} }
 }
-function showLock(bad){document.getElementById("lock").hidden=false;document.getElementById("lerr").hidden=!bad;document.getElementById("pc").focus()}
-document.getElementById("lf").addEventListener("submit",ev=>{ev.preventDefault();pass=document.getElementById("pc").value.trim();load()});
+function showLock(bad,keep){document.getElementById("lock").hidden=false;if(!keep)status("");document.getElementById("pc").focus()}
+document.getElementById("lf").addEventListener("submit",ev=>{ev.preventDefault();pass=document.getElementById("pc").value.trim().toLowerCase();status("Unlocking…");load()});
 load();
 setInterval(()=>{if(lastCt)render()},30000);
 setInterval(load,10*60*1000);
