@@ -70,7 +70,7 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 .row .ev{flex:0 0 15vw}
 
 
-.legend .wk i.wkband{width:1.4vw;height:.95vw;border-radius:.25vw;border:0;background:color-mix(in srgb,var(--p2) 22%,var(--panel-solid));outline:1px dashed var(--p2);outline-offset:-1px}
+.legend .wk i.wkband{width:1.4vw;height:.95vw;border-radius:.25vw;border:0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p2) 30%,var(--panel-solid)) 0 .25vw,var(--panel-solid) .25vw .5vw);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p2) 35%,transparent)}
 .strip{display:flex;gap:.5vw;align-items:baseline;flex-wrap:wrap;font-size:1vw;line-height:1.35;color:var(--fg)}
 .strip b{font-family:var(--mono);font-weight:500;font-size:.78vw;letter-spacing:.12em;text-transform:uppercase;color:var(--on);background:var(--p2);border-radius:.25vw;padding:.05vw .4vw}
 .strip.b b{background:var(--p1)}
@@ -93,6 +93,16 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 .col{display:flex;flex-direction:column;gap:.5vw;min-height:0;min-width:0}
 .card ul .line:first-of-type{border-top:0}
 .card .strip + .line{border-top:1px solid var(--line)}
+.col.today .line{grid-template-columns:1.05vw 10.5vw minmax(0,1fr);padding:.6vw .3vw;align-items:baseline}
+.col.today .line .sw{grid-row:span 2}
+.col.today .line .tm{grid-column:2}
+.col.today .line .ti,.col.today .line .sub{grid-column:3}
+.col.today .line .sw{width:.95vw;height:.95vw;margin-top:.45vw}
+.col.today .line .tm{font-size:1.2vw}.col.today .line .ti{font-size:1.85vw}.col.today .line .sub{font-size:1.2vw}
+.col.today .dh em{font-size:3vw}.col.today .dh b{font-size:1.35vw}
+.col.today .strip{font-size:1.2vw}.col.today .strip span{font-size:1.05vw}.col.today .strip span i{font-size:1.2vw}.col.today .strip b{font-size:.9vw}
+.col:not(.today) .line .ti{font-size:1.25vw}.col:not(.today) .line .tm{font-size:.88vw}
+.row.today .line .ti{font-size:1.75vw}.row.today .line .tm{font-size:1.1vw}.row.today .lab em{font-size:3vw}
 .weekend{display:flex;flex-direction:column;gap:.6vw}
 .weekend .card{flex-direction:row;padding:.3vw .9vw;align-items:center}
 .weekend .card ul{flex-direction:row;flex-wrap:wrap;align-items:center;gap:0 1.2vw}
@@ -204,6 +214,7 @@ function zoomFit(sel,min){
 
 function render(){
   const H=header();let html="";
+  document.getElementById("weekdays").style.gridTemplateColumns=[1,2,3,4,5].map(d=>d===H.today?"minmax(0,2.1fr)":"minmax(0,1fr)").join(" ");
   for(let d=1;d<=5;d++)html+=`<section class="col${d===H.today?" today":""}"><div class="dh pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div><div class="card"><ul>${agenda(d,H.today,H.nowM)}</ul></div></section>`;
   document.getElementById("weekdays").innerHTML=html;
   document.getElementById("weekend").innerHTML=[6,0].map(d=>`<section class="row${d===H.today?" today":""}"><div class="lab pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div><div class="card"><ul>${agenda(d,H.today,H.nowM)}</ul></div></section>`).join("");

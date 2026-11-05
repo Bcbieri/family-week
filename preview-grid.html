@@ -70,7 +70,7 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 .row .ev{flex:0 0 15vw}
 
 
-.legend .wk i.wkband{width:1.4vw;height:.95vw;border-radius:.25vw;border:0;background:color-mix(in srgb,var(--p2) 22%,var(--panel-solid));outline:1px dashed var(--p2);outline-offset:-1px}
+.legend .wk i.wkband{width:1.4vw;height:.95vw;border-radius:.25vw;border:0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p2) 30%,var(--panel-solid)) 0 .25vw,var(--panel-solid) .25vw .5vw);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p2) 35%,transparent)}
 .strip{display:flex;gap:.5vw;align-items:baseline;flex-wrap:wrap;font-size:1vw;line-height:1.35;color:var(--fg)}
 .strip b{font-family:var(--mono);font-weight:500;font-size:.78vw;letter-spacing:.12em;text-transform:uppercase;color:var(--on);background:var(--p2);border-radius:.25vw;padding:.05vw .4vw}
 .strip.b b{background:var(--p1)}
@@ -97,15 +97,19 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 .hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
 .axis .hr{border:0}
 .axis .hr span{position:absolute;right:.2vw;top:-.65vw;font-family:var(--mono);font-size:.82vw;font-weight:500;color:var(--fg);background:var(--panel);border-radius:.3vw;padding:0 .3vw;white-space:nowrap}
-.band{position:absolute;left:0;right:0;background:color-mix(in srgb,var(--p2) 20%,transparent);border-top:1px dashed color-mix(in srgb,var(--p2) 60%,transparent);border-bottom:1px dashed color-mix(in srgb,var(--p2) 60%,transparent)}
-.band.b{background:color-mix(in srgb,var(--p1) 20%,transparent)}
-.band span{position:absolute;right:.15vw;top:.3vw;writing-mode:vertical-rl;font-family:var(--mono);font-size:.7vw;letter-spacing:.1em;text-transform:uppercase;color:var(--p2);white-space:nowrap;overflow:hidden;max-height:calc(100% - .6vw)}
+.band{position:absolute;left:.25vw;right:.25vw;border-radius:.5vw;
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p2) 13%,transparent) 0 .55vw,color-mix(in srgb,var(--p2) 6%,transparent) .55vw 1.1vw);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p2) 22%,transparent)}
+.band.b{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p1) 14%,transparent) 0 .55vw,color-mix(in srgb,var(--p1) 6%,transparent) .55vw 1.1vw);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p1) 24%,transparent)}
+.band span{position:absolute;right:.2vw;top:.35vw;writing-mode:vertical-rl;font-family:var(--mono);font-weight:500;font-size:.78vw;letter-spacing:.12em;text-transform:uppercase;color:var(--p2);white-space:nowrap;overflow:hidden;max-height:calc(100% - .7vw);background:var(--panel-solid);border-radius:.3vw;padding:.3vw .1vw}
 .band.b span{color:var(--p1)}
-.blk{position:absolute;left:.35vw;right:1.5vw;border-radius:.45vw;padding:.3vw .55vw;overflow:hidden;color:var(--on);box-shadow:0 .2vw .7vw rgba(52,38,26,.35);box-sizing:border-box;display:flex;flex-direction:column;gap:.05vw}
+.band.tiny span{display:none}
+.blk{position:absolute;left:.5vw;right:1.9vw;border-radius:.45vw;padding:.22vw .55vw;overflow:hidden;color:var(--on);box-shadow:0 .2vw .7vw rgba(52,38,26,.35);box-sizing:border-box;display:flex;flex-direction:column;gap:.05vw}
 .blk.b{background:var(--p1)}.blk.w{background:var(--p2)}.blk.both{background:var(--both)}
-.blk.L{right:calc(50% + .2vw)}.blk.R{left:calc(50% - 1.2vw)}
+.blk.L{right:calc(50% + .25vw)}.blk.R{left:calc(50% - 1.4vw)}
 .blk .tm{font-family:var(--mono);font-weight:500;font-size:.82vw;color:var(--on-soft)}
 .blk .ti{font-size:1.1vw;font-weight:600;line-height:1.15}
+.blk.mid .ti{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:1.02vw}.blk.mid .tm{font-size:.76vw}
 .blk .sub{font-size:.85vw;font-style:italic;color:var(--on-soft);line-height:1.15}
 .blk.short{flex-direction:row;align-items:baseline;gap:.4vw;padding-block:.15vw;white-space:nowrap}
 .blk.short .ti{overflow:hidden;text-overflow:ellipsis;font-size:1.02vw}
@@ -226,14 +230,14 @@ function render(){
     const all=dayEvents(d), ev=all.filter(e=>!e.work);
     let inner="";
     for(let m=T0+60;m<T1;m+=60)inner+=`<div class="hr" style="top:${pct(m)}%"></div>`;
-    all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}" style="top:${pct(s)}%;height:${pct(en)-pct(s)}%"><span>${esc(place(e))}</span></div>`});
+    all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}${(en-s)<75?" tiny":""}" style="top:${pct(s)}%;height:${pct(en)-pct(s)}%"><span>${esc(place(e))}</span></div>`});
     ev.forEach(e=>{
       const s=mins(e.s),en=e.e?mins(e.e):s+30;
       const clash=ev.some(o=>o!==e&&o.who!==e.who&&e.who!=="both"&&o.who!=="both"&&mins(o.s)<en&&(o.e?mins(o.e):mins(o.s)+30)>s);
       const lane=clash?(e.who==="b"?" R":" L"):"";
-      const short=(en-s)<75?" short":"";
+      const short=(en-s)<50?" short":(en-s)<100?" mid":"";
       const isNow=d===H.today&&H.nowM>=s&&H.nowM<en;
-      inner+=`<div class="blk ${e.who}${lane}${short}" style="top:${pct(s)}%;height:${pct(en)-pct(s)}%;${isNow?"outline:2px solid var(--fg);outline-offset:1px;":""}"><span class="tm">${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub&&!short?`<span class="sub">${esc(e.sub)}</span>`:""}</div>`;
+      inner+=`<div class="blk ${e.who}${lane}${short}" style="top:${pct(s)}%;height:${pct(en)-pct(s)}%;${isNow?"outline:2px solid var(--fg);outline-offset:1px;":""}"><span class="tm">${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub&&!short&&(en-s)>=100?`<span class="sub">${esc(e.sub)}</span>`:""}</div>`;
     });
     if(d===H.today&&H.nowM>T0&&H.nowM<T1)inner+=`<div class="nowline" style="top:${pct(H.nowM)}%"></div>`;
     html+=`<section class="col${d===H.today?" today":""}"><div class="dh pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div><div class="tg">${inner}</div></section>`;
