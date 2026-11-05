@@ -5,18 +5,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: a living-room wall board — big clock band on top, seven day columns that fill one TV screen; stacks to a list on phones. Dark by design to sit quietly on a TV. */
+/* Layout: a living-room wall board — big clock band on top, seven day columns that fill one TV screen; stacks to a list on phones. Warm wood-brown by design, cozy on a living-room TV. */
 :root{
   color-scheme: dark;
-  --bg:#10151c;
-  --panel:#171e27;
-  --line:#26303c;
-  --fg:#eef2f6;
-  --muted:#8995a3;
-  --p1:#7cc0ff;
-  --p2:#f3bd6b;
-  --both:#cfa6f5;
-  --today:#e9f1fa;
+  --bg:#2a1f18;
+  --panel:#352820;
+  --line:#4b3b2e;
+  --fg:#f4e6d0;
+  --muted:#b5a089;
+  --p1:#7d9cc4;
+  --p2:#d99a9a;
+  --both:#e6b85c;
+  --today:#f1dcb8;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
 }
@@ -53,8 +53,8 @@ ul{list-style:none;margin:0;padding:.5vw;display:flex;flex-direction:column;gap:
 .ev .tm{font-size:.88vw;color:var(--muted);font-variant-numeric:tabular-nums}
 .ev .ti{grid-column:2;font-size:1.12vw;font-weight:700;line-height:1.22;text-wrap:balance}
 .ev .sub{grid-column:2;font-size:.85vw;color:var(--muted);line-height:1.25}
-.ev.b{background:color-mix(in srgb,var(--p1) 16%,transparent)} .ev.b .dot{background:var(--p1)}
-.ev.w{background:color-mix(in srgb,var(--p2) 14%,transparent)} .ev.w .dot{background:var(--p2)}
+.ev.b{background:color-mix(in srgb,var(--p1) 22%,transparent)} .ev.b .dot{background:var(--p1)}
+.ev.w{background:color-mix(in srgb,var(--p2) 22%,transparent)} .ev.w .dot{background:var(--p2)}
 .ev.both{background:color-mix(in srgb,var(--both) 18%,transparent)} .ev.both .dot{background:var(--both)}
 .ev.work{background:transparent;padding-block:.25vw;opacity:.5}
 .ev.work .dot{background:transparent;border:2px solid var(--muted);box-sizing:border-box}
