@@ -204,6 +204,9 @@ function showLock(bad,keep){document.getElementById("lock").hidden=false;if(!kee
 document.getElementById("lf").addEventListener("submit",ev=>{ev.preventDefault();pass=document.getElementById("pc").value.trim().toLowerCase();status("Unlocking…");load()});
 load();
 setInterval(()=>{if(lastCt)render()},30000);
-setInterval(load,10*60*1000);
+const VERSION="5";
+async function checkVersion(){try{const v=(await (await fetch("version.txt?t="+Date.now(),{cache:"no-store"})).text()).trim();if(v&&v!==VERSION)location.replace(location.pathname+"?v="+v)}catch(e){}}
+setInterval(()=>{load();checkVersion()},10*60*1000);
+checkVersion();
 </script>
 </body></html>
