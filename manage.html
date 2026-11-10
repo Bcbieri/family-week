@@ -276,6 +276,13 @@ function weekLabel(){const m=dateOf(1),s=dateOf(0);return `${MONTHS[m.getMonth()
 const mins=s=>{const[h,m]=s.split(":").map(Number);return h*60+m};
 function fmt(s){const m=mins(s),h=Math.floor(m/60),mm=m%60;return {t:(h%12||12)+(mm?":"+String(mm).padStart(2,"0"):""),ap:h<12?"AM":"PM"}}
 function range(s,e){const a=fmt(s);if(!e)return a.t+" "+a.ap;const b=fmt(e);return a.ap===b.ap?`${a.t}–${b.t} ${b.ap}`:`${a.t} ${a.ap}–${b.t} ${b.ap}`}
+// Times in 15-minute steps; an existing odd time (like 9:10) is kept as its own option.
+function timeOptions(sel,allowNone){
+  let o=allowNone?`<option value=""${sel?"":" selected"}>No end time</option>`:"", found=!sel;
+  for(let m=5*60;m<24*60;m+=15){const v=String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");const f=fmt(v);if(v===sel)found=true;o+=`<option value="${v}"${v===sel?" selected":""}>${f.t}${f.t.includes(":")?"":":00"} ${f.ap}</option>`}
+  if(!found){const f=fmt(sel);o=`<option value="${sel}" selected>${f.t} ${f.ap}</option>`+o}
+  return o;
+}
 const pad=s=>{const[h,m]=s.split(":");return String(+h).padStart(2,"0")+":"+String(+m).padStart(2,"0")};
 const short=s=>{const[h,m]=s.split(":").map(Number);return `${h}:${String(m).padStart(2,"0")}`};
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -330,8 +337,8 @@ function editor(e,d){
     </div>
     <label class="field"><span id="tLabel">${work?"Where":"What"}</span><input id="fTitle" type="text" value="${esc(title)}" placeholder="${work?"campus, home…":"Dinner with the Campbells"}" autocomplete="off"></label>
     <div class="row2">
-      <label class="field"><span>Starts</span><input id="fStart" type="time" value="${s}" step="900"></label>
-      <label class="field"><span>Ends</span><input id="fEnd" type="time" value="${en}" step="900"></label>
+      <label class="field"><span>Starts</span><select id="fStart">${timeOptions(s,false)}</select></label>
+      <label class="field"><span>Ends</span><select id="fEnd">${timeOptions(en,true)}</select></label>
     </div>
     <label class="field"><span>Note (optional)</span><input id="fSub" type="text" value="${esc(e?e.sub:"")}" placeholder="Place, who's coming…" autocomplete="off"></label>
     <div class="field"><span>${e?"Also copy to":"Also add to"}</span><div class="chips">${days}</div></div>

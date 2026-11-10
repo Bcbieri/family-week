@@ -97,10 +97,11 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 .hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
 .axis .hr{border:0}
 .axis .hr span{position:absolute;right:.2vw;top:-.65vw;font-family:var(--mono);font-size:.82vw;font-weight:500;color:var(--fg);background:var(--panel);border-radius:.3vw;padding:0 .3vw;white-space:nowrap}
+.hr.major{border-top:1.5px solid color-mix(in srgb,var(--muted) 30%,transparent)}
 .band{position:absolute;left:.25vw;right:.25vw;border-radius:.5vw;
   background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p2) 13%,transparent) 0 .55vw,color-mix(in srgb,var(--p2) 6%,transparent) .55vw 1.1vw);
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p2) 22%,transparent)}
-.band.b{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--p1) 14%,transparent) 0 .55vw,color-mix(in srgb,var(--p1) 6%,transparent) .55vw 1.1vw);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p1) 24%,transparent)}
+.band.b{background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--p1) 14%,transparent) 0 .55vw,color-mix(in srgb,var(--p1) 6%,transparent) .55vw 1.1vw);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--p1) 24%,transparent)}
 .band span{position:absolute;right:.2vw;top:.35vw;writing-mode:vertical-rl;font-family:var(--mono);font-weight:500;font-size:.78vw;letter-spacing:.12em;text-transform:uppercase;color:var(--p2);white-space:nowrap;overflow:hidden;max-height:calc(100% - .7vw);background:var(--panel-solid);border-radius:.3vw;padding:.3vw .1vw}
 .band.b span{color:var(--p1)}
 .band.tiny span{display:none}
@@ -260,17 +261,19 @@ function zoomFit(sel,min){
 }
 
 let T0=8*60,T1=20*60;const pct=m=>Math.max(0,Math.min(100,(m-T0)/(T1-T0)*100));
-function span(){const w=WEEK.events.filter(e=>e.d>=1&&e.d<=5);if(!w.length)return;T0=Math.floor(Math.min(...w.map(e=>mins(e.s)))/60)*60;T1=Math.ceil(Math.max(...w.map(e=>e.e?mins(e.e):mins(e.s)+30))/60)*60;}
+// Every column uses the same fixed day, 6 AM to 10 PM, so blocks show their true share of the day.
+// The window only grows (to the hour) if an event starts earlier or ends later.
+function span(){T0=6*60;T1=22*60;const w=WEEK.events.filter(e=>e.d>=1&&e.d<=5);if(!w.length)return;T0=Math.min(T0,Math.floor(Math.min(...w.map(e=>mins(e.s)))/60)*60);T1=Math.max(T1,Math.ceil(Math.max(...w.map(e=>e.e?mins(e.e):mins(e.s)+30))/60)*60);}
 function column(d,H){
   const all=dayEvents(d), ev=all.filter(e=>!e.work), big=d===H.today;
   let inner="";
-  for(let m=T0+60;m<T1;m+=60)inner+=`<div class="hr" style="top:${pct(m)}%"></div>`;
+  for(let m=T0+60;m<T1;m+=60)inner+=`<div class="hr${m%360===0?" major":""}" style="top:${pct(m)}%"></div>`;
   all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}${(en-s)<75?" tiny":""}" style="top:calc(${pct(s)}% + .1vw);height:calc(${pct(en)-pct(s)}% - .2vw)"><span>${esc(place(e))}</span></div>`});
   ev.forEach(e=>{
     const s=mins(e.s),en=e.e?mins(e.e):s+30, len=en-s;
     const clash=ev.some(o=>o!==e&&o.who!==e.who&&e.who!=="both"&&o.who!=="both"&&mins(o.s)<en&&(o.e?mins(o.e):mins(o.s)+30)>s);
     const lane=clash?(e.who==="b"?" R":" L"):"";
-    const size=big?(len<75?" short"+(len<=30?" xs":""):""):(len<50?" short":len<100?" mid":"");
+    const size=big?(len<75?" short"+(len<=30?" xs":""):""):(len<=60?" short":len<120?" mid":"");
     const isNow=big&&H.nowM>=s&&H.nowM<en;
     inner+=`<div class="blk ${e.who}${lane}${size}" style="top:calc(${pct(s)}% + .22vw);height:calc(${pct(en)-pct(s)}% - .44vw);${isNow?"outline:2px solid var(--fg);outline-offset:1px;":""}"><span class="tm">${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub&&!size?`<span class="sub">${esc(e.sub)}</span>`:""}</div>`;
   });
@@ -414,7 +417,7 @@ load();
 setInterval(()=>{if(lastCt)render()},30000);
 
 setInterval(load,2*60*1000);
-const VERSION="12";
+const VERSION="13";
 async function checkVersion(){try{const v=(await (await fetch("version.txt?t="+Date.now(),{cache:"no-store"})).text()).trim();if(v&&v!==VERSION)location.replace(location.pathname+"?v="+v)}catch(e){}}
 setInterval(checkVersion,10*60*1000);checkVersion();
 setTimeout(()=>{try{location.reload()}catch(e){}},6*60*60*1000);
