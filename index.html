@@ -315,7 +315,37 @@ function _old(){
   b.innerHTML=html;
   fit();
 }
-function fit(){zoomFit(".wcard ul",.6)}
+function fit(){zoomFit(".wcard ul",.6);placeLabels()}
+// Work-place tags: when two work blocks overlap in time, their tags would sit on top of each other.
+// Keep the first where it is; move the next one down into the free space of its own block,
+// or to the block's left edge if there's no room below.
+function placeLabels(){
+  document.querySelectorAll(".tg").forEach(tg=>{
+    const tags=[...tg.querySelectorAll(".band span")];
+    tags.forEach(t=>{t.style.top="";t.style.right="";t.style.left=""});
+    if(tags.length<2)return;
+    const gap=6, placed=[];
+    const box=t=>t.getBoundingClientRect();
+    const hits=r=>placed.some(p=>r.top<p.bottom+gap&&r.bottom>p.top-gap&&r.left<p.right&&r.right>p.left);
+    tags.sort((x,y)=>box(x).top-box(y).top).forEach(t=>{
+      const band=t.parentElement, br=band.getBoundingClientRect();
+      let r=box(t);
+      if(hits(r)){
+        const h=r.height, startTop=parseFloat(getComputedStyle(t).top)||0;
+        let ok=false;
+        // try sliding down inside its own block
+        for(let y=startTop;y+h<=br.height-4;y+=4){
+          t.style.top=y+"px";r=box(t);if(!hits(r)){ok=true;break}
+        }
+        // no room below: try the left edge of the block instead
+        if(!ok){t.style.top="";t.style.right="auto";t.style.left=".2vw";r=box(t);
+          if(hits(r)){for(let y=startTop;y+h<=br.height-4;y+=4){t.style.top=y+"px";r=box(t);if(!hits(r)){ok=true;break}}}else ok=true}
+        if(!ok){t.style.display="none";return}
+      }
+      placed.push(box(t));
+    });
+  });
+}
 
 // Weather for Iowa City from Open-Meteo, refreshed every 30 minutes
 const WX={lat:41.661,lon:-91.530};
@@ -417,7 +447,7 @@ load();
 setInterval(()=>{if(lastCt)render()},30000);
 
 setInterval(load,2*60*1000);
-const VERSION="13";
+const VERSION="14";
 async function checkVersion(){try{const v=(await (await fetch("version.txt?t="+Date.now(),{cache:"no-store"})).text()).trim();if(v&&v!==VERSION)location.replace(location.pathname+"?v="+v)}catch(e){}}
 setInterval(checkVersion,10*60*1000);checkVersion();
 setTimeout(()=>{try{location.reload()}catch(e){}},6*60*60*1000);
