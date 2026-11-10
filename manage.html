@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Family Week</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f3eadc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Family Week">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single calm column like a paper planner. Week header, screenshots for reference, then Monday to Sunday with events you tap to edit in place. */
+:root{
+  color-scheme: light;
+  --bg:#f3eadc;        /* latte paper */
+  --card:#fffaf4;      /* linen */
+  --line:#e6d9c6;
+  --ink:#3f2e21;       /* café noir */
+  --soft:#7a6450;      /* clockwork, for secondary text */
+  --b:#6c6a51;         /* Brandon: cedar */
+  --w:#755151;         /* Eden: mauve */
+  --both:#8a6a48;      /* together: clockwork */
+  --go:#44422d;        /* deep olive, primary action */
+  --on:#fffaf4;
+  --warn:#9a4a3a;
+  --display:"Cormorant Garamond", Garamond, "Times New Roman", serif;
+  --ui:"Source Sans 3", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 var(--ui);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--go) 55%,transparent);outline-offset:2px}
+
+/* header */
+.top{padding-block:22px 6px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;margin:0;letter-spacing:-.01em}
+.weekof{font-family:var(--display);font-style:italic;font-size:21px;color:var(--soft);margin-top:4px;font-variant-numeric:lining-nums}
+.status{font-size:14px;color:var(--soft);margin:10px 0 0;display:flex;align-items:center;gap:8px;min-height:20px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--b);flex:none}
+.status.dirty i{background:var(--both)}
+.status.err{color:var(--warn)} .status.err i{background:var(--warn)}
+
+.btn{border:0;border-radius:999px;padding:12px 20px;font-weight:600;font-size:16px;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.primary{background:var(--go);color:var(--on);box-shadow:none}
+.btn.primary:disabled{opacity:.45;cursor:default}
+.btn.quiet{background:transparent;box-shadow:none;color:var(--soft);padding:10px 12px}
+.btn.small{padding:8px 14px;font-size:15px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 4px}
+.actions .primary{flex:1 1 auto}
+
+section.block{margin-top:26px}
+.label{font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+
+/* screenshots */
+.shots{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.shot{flex:none;position:relative}
+.shot img{display:block;height:120px;border-radius:10px;box-shadow:0 1px 0 var(--line),0 0 0 1px var(--line)}
+.shot button{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(63,46,33,.75);color:#fff;font-size:16px;line-height:28px;padding:0}
+.addshot{flex:none;height:120px;width:96px;border-radius:10px;border:1.5px dashed var(--line);background:transparent;color:var(--soft);font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;text-align:center}
+.addshot b{font-size:26px;font-weight:400;line-height:1}
+.viewer{margin-top:12px;background:var(--card);border-radius:var(--r);box-shadow:0 0 0 1px var(--line);overflow:hidden}
+.viewer .vbar{display:flex;justify-content:space-between;align-items:center;padding:6px 6px 6px 14px;font-size:14px;color:var(--soft);border-bottom:1px solid var(--line)}
+.viewer .vscroll{max-height:62vh;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
+.viewer img{display:block;width:100%;height:auto}
+.viewer .zoom{display:flex;gap:4px}
+
+/* days */
+.day{background:var(--card);border-radius:var(--r);box-shadow:0 0 0 1px var(--line);margin-bottom:12px;overflow:hidden}
+.dh{display:flex;align-items:baseline;gap:10px;padding:14px 16px 10px}
+.dh b{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.dh em{font-style:normal;font-family:var(--display);font-weight:700;font-size:28px;line-height:1;font-variant-numeric:lining-nums}
+.dh .today{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--go);color:var(--on);border-radius:999px;padding:2px 9px;align-self:center}
+.dh .add{margin-left:auto}
+.ev{display:grid;grid-template-columns:4px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:11px 16px;border-top:1px solid var(--line)}
+.ev .bar{align-self:stretch;border-radius:2px}
+.ev .tm{font-size:14px;color:var(--soft);font-variant-numeric:tabular-nums}
+.ev .ti{font-weight:600;font-size:17px;line-height:1.25}
+.ev .sub{font-size:14px;color:var(--soft)}
+.ev .who{font-size:13px;color:var(--soft)}
+.ev.work .ti{font-weight:500}
+.ev.work .bar{background:repeating-linear-gradient(180deg,currentColor 0 4px,transparent 4px 7px)!important;color:var(--soft)}
+.empty{padding:2px 16px 16px;color:var(--soft);font-style:italic;font-family:var(--display);font-size:19px}
+
+/* editor */
+.edit{border-top:1px solid var(--line);padding:16px;background:color-mix(in srgb,var(--bg) 45%,var(--card));display:grid;gap:14px}
+.seg{display:flex;background:var(--bg);border-radius:999px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:transparent;border-radius:999px;padding:9px 6px;font-weight:600;font-size:15px;color:var(--soft)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(63,46,33,.15)}
+.seg button[data-who="b"][aria-pressed="true"]{color:var(--b)}
+.seg button[data-who="w"][aria-pressed="true"]{color:var(--w)}
+.seg button[data-who="both"][aria-pressed="true"]{color:var(--both)}
+.field{display:grid;gap:6px}
+.field>span{font-size:14px;font-weight:600;color:var(--soft)}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:11px 12px;font-size:17px;min-height:46px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{display:flex}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips span{border-radius:999px;padding:7px 13px;font-size:15px;font-weight:600;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);color:var(--soft)}
+.chips input:checked+span{background:var(--go);color:var(--on);box-shadow:none}
+.chips input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--go) 55%,transparent);outline-offset:2px}
+.edit .actions{margin:0}
+.err{color:var(--warn);font-size:14px;margin:0}
+.hint{font-size:14px;color:var(--soft);margin:0}
+
+/* setup + new week + settings */
+.panel{background:var(--card);border-radius:var(--r);box-shadow:0 0 0 1px var(--line);padding:18px;display:grid;gap:14px}
+.panel h2{font-family:var(--display);font-weight:700;font-size:26px;margin:0;line-height:1.1}
+.panel p{margin:0}
+.panel ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:15px}
+.panel code{font-size:14px;background:var(--bg);padding:1px 5px;border-radius:4px}
+details.settings summary{list-style:none;cursor:pointer;font-size:15px;font-weight:600;color:var(--soft);padding:10px 0}
+details.settings summary::-webkit-details-marker{display:none}
+.toast{margin:14px 0 0;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--b) 14%,var(--card));color:var(--ink);font-size:15px}
+.toast.bad{background:color-mix(in srgb,var(--warn) 12%,var(--card))}
+@media (prefers-reduced-motion:no-preference){.edit,.toast{animation:in .18s ease-out}@keyframes in{from{opacity:0;transform:translateY(-4px)}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- First run: passcode and save key -->
+  <section id="setup" class="block" hidden>
+    <div class="top"><div><h1>Family Week</h1><div class="weekof">Set up this phone</div></div></div>
+    <form id="setupForm" class="panel" style="margin-top:18px" novalidate>
+      <div class="field"><span>Calendar passcode</span><input id="sPass" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="the same one the TV uses"></div>
+      <div class="field"><span>GitHub save key</span><input id="sKey" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="github_pat_…"></div>
+      <p class="hint">The save key lets this phone update the TV. It stays on this phone only.</p>
+      <p class="err" id="setupErr" hidden></p>
+      <button class="btn primary" id="setupGo">Unlock</button>
+    </form>
+    <div class="panel" style="margin-top:14px">
+      <h2>Making a save key</h2>
+      <ol>
+        <li>On github.com, open <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens</b>, then <b>Generate new token</b>.</li>
+        <li>Name it <code>Family Week</code>. Set expiration to <b>No expiration</b>, or a year.</li>
+        <li>Repository access: <b>Only select repositories</b>, choose <code>family-week</code>.</li>
+        <li>Permissions: <b>Contents → Read and write</b>.</li>
+        <li>Generate, copy the key, and paste it above. Use the same key on Eden's phone.</li>
+      </ol>
+      <a class="btn small" style="justify-self:start;text-decoration:none" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Open GitHub token page</a>
+    </div>
+  </section>
+
+  <!-- Main app -->
+  <main id="app" hidden>
+    <div class="top">
+      <div><h1>Family Week</h1><div class="weekof" id="weekof"></div></div>
+    </div>
+    <p class="status" id="status"><i></i><span id="statusText"></span></p>
+    <div class="actions">
+      <button class="btn primary" id="saveTop" disabled>Send to TV</button>
+      <button class="btn" id="newWeekBtn">New week</button>
+    </div>
+    <div id="toast" class="toast" hidden></div>
+
+    <!-- New week -->
+    <form id="newWeek" class="panel" style="margin-top:14px" hidden novalidate>
+      <h2>Start a new week</h2>
+      <div class="field"><span>Week starting Monday</span><input id="nwDate" type="date"></div>
+      <div class="field"><span>Bring over from this week</span>
+        <div class="seg" role="group" aria-label="What to copy">
+          <button type="button" data-copy="work" aria-pressed="true">Work blocks</button>
+          <button type="button" data-copy="all" aria-pressed="false">Everything</button>
+          <button type="button" data-copy="none" aria-pressed="false">Nothing</button>
+        </div>
+      </div>
+      <p class="hint">Nothing changes on the TV until you tap Send to TV.</p>
+      <div class="actions"><button class="btn primary" id="nwGo">Start week</button><button type="button" class="btn quiet" id="nwCancel">Cancel</button></div>
+    </form>
+
+    <section class="block">
+      <p class="label"><span>Screenshots to copy from</span></p>
+      <div class="shots" id="shots">
+        <button class="addshot" id="addShot"><b>+</b>Add screenshot</button>
+      </div>
+      <input id="shotFile" type="file" accept="image/*" multiple hidden>
+      <div class="viewer" id="viewer" hidden>
+        <div class="vbar"><span id="vName">Screenshot</span>
+          <span class="zoom"><button class="btn quiet small" id="zOut" aria-label="Zoom out">−</button><button class="btn quiet small" id="zIn" aria-label="Zoom in">+</button><button class="btn quiet small" id="vClose">Hide</button></span></div>
+        <div class="vscroll"><img id="vImg" alt="Schedule screenshot"></div>
+      </div>
+      <p class="hint" style="margin-top:8px">Screenshots stay on this phone. They are only here so you can copy from them.</p>
+    </section>
+
+    <section class="block" id="days"></section>
+
+    <div class="actions"><button class="btn primary" id="saveBottom" disabled>Send to TV</button></div>
+
+    <details class="settings block">
+      <summary>Settings</summary>
+      <form id="settingsForm" class="panel" novalidate>
+        <div class="row2">
+          <div class="field"><span>First person</span><input id="nB" type="text"></div>
+          <div class="field"><span>Second person</span><input id="nW" type="text"></div>
+        </div>
+        <div class="field"><span>GitHub save key</span><input id="setKey" type="password" autocomplete="off" placeholder="Leave blank to keep the current key"></div>
+        <div class="actions" style="margin:0"><button class="btn" id="setSave">Save settings</button><button type="button" class="btn quiet" id="forget">Forget this phone</button></div>
+        <p class="hint">Forget this phone removes the passcode and save key from this phone. The TV keeps working.</p>
+      </form>
+    </details>
+  </main>
+</div>
+
+<script>
+const REPO="Bcbieri/family-week", FILE="cal.json", API=`https://api.github.com/repos/${REPO}/contents/${FILE}`;
+const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const SHORT=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const ORDER=[1,2,3,4,5,6,0];
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+
+let pass=store.get("fw-pass"), key=store.get("fw-key");
+let week=null, sha=null, loadedCt="", dirty=false, editing=null; // editing = {i} or {d, isNew:true}
+
+/* ---------- crypto (matches the TV page) ---------- */
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const tob64=u=>{let s="";u=new Uint8Array(u);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+async function deriveKey(p,salt,iter){
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(p),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function decrypt(blob,p){
+  const k=await deriveKey(p,b64(blob.salt),blob.iter);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(blob.iv)},k,b64(blob.ct))));
+}
+async function encrypt(obj,p){
+  const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12)), iter=150000;
+  const k=await deriveKey(p,salt,iter);
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},k,new TextEncoder().encode(JSON.stringify(obj)));
+  return {v:1,iter,salt:tob64(salt),iv:tob64(iv),ct:tob64(ct)};
+}
+
+/* ---------- GitHub ---------- */
+function utf8b64(str){return tob64(new TextEncoder().encode(str))}
+async function gh(method,body){
+  const r=await fetch(API+(method==="GET"?`?t=${Date.now()}`:""),{method,cache:"no-store",headers:{"Authorization":`Bearer ${key}`,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined});
+  if(!r.ok){const e=new Error("http");e.status=r.status;throw e}
+  return r.json();
+}
+async function fetchLatest(){
+  const f=await gh("GET");
+  const raw=atob(f.content.replace(/\n/g,""));
+  const blob=JSON.parse(new TextDecoder().decode(Uint8Array.from(raw,c=>c.charCodeAt(0))));
+  return {blob,sha:f.sha};
+}
+function ghMessage(e){
+  if(e.status===401)return "GitHub didn't accept the save key. Check it in Settings, or make a new one.";
+  if(e.status===403||e.status===404)return "The save key can't reach the family-week repository. Make sure it has Contents: Read and write for that repository.";
+  if(e.status===409)return "Someone else saved at the same moment. Tap Send to TV again.";
+  if(e.status===422)return "GitHub rejected the update. Tap Send to TV again.";
+  return "Couldn't reach GitHub. Check your connection and try again.";
+}
+
+/* ---------- dates ---------- */
+const parseDate=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const fmtDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const dateOf=d=>addDays(parseDate(week.start),d===0?7:d);   // Sunday is the end of the week
+function mondayOf(date){const x=new Date(date.getFullYear(),date.getMonth(),date.getDate());const wd=x.getDay();return addDays(x,wd===0?-6:1-wd)}
+function weekLabel(){const m=dateOf(1),s=dateOf(0);return `${MONTHS[m.getMonth()]} ${m.getDate()} – ${m.getMonth()===s.getMonth()?"":MONTHS[s.getMonth()]+" "}${s.getDate()}`}
+const mins=s=>{const[h,m]=s.split(":").map(Number);return h*60+m};
+function fmt(s){const m=mins(s),h=Math.floor(m/60),mm=m%60;return {t:(h%12||12)+(mm?":"+String(mm).padStart(2,"0"):""),ap:h<12?"AM":"PM"}}
+function range(s,e){const a=fmt(s);if(!e)return a.t+" "+a.ap;const b=fmt(e);return a.ap===b.ap?`${a.t}–${b.t} ${b.ap}`:`${a.t} ${a.ap}–${b.t} ${b.ap}`}
+const pad=s=>{const[h,m]=s.split(":");return String(+h).padStart(2,"0")+":"+String(+m).padStart(2,"0")};
+const short=s=>{const[h,m]=s.split(":").map(Number);return `${h}:${String(m).padStart(2,"0")}`};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const placeOf=e=>e.t.replace(/^Work · /,"");
+
+/* ---------- status ---------- */
+function setStatus(){
+  const st=$("status");
+  st.className="status"+(dirty?" dirty":"");
+  $("statusText").textContent=dirty?"Changes not on the TV yet":`On the TV · updated ${week.updated||"—"}`;
+  $("saveTop").disabled=$("saveBottom").disabled=!dirty;
+}
+function toast(msg,bad){const t=$("toast");t.textContent=msg;t.className="toast"+(bad?" bad":"");t.hidden=false;clearTimeout(toast.t);if(!bad)toast.t=setTimeout(()=>t.hidden=true,6000)}
+function changed(){dirty=true;store.set("fw-draft",JSON.stringify({week,base:loadedCt}));setStatus()}
+
+/* ---------- render ---------- */
+function render(){
+  $("weekof").textContent="Week of "+weekLabel();
+  const now=new Date(), todayStr=fmtDate(now);
+  let html="";
+  for(const d of ORDER){
+    const date=dateOf(d), list=week.events.map((e,i)=>({...e,i})).filter(e=>e.d===d).sort((a,b)=>mins(a.s)-mins(b.s)||(a.work?1:0)-(b.work?1:0));
+    html+=`<article class="day" id="day-${d}"><div class="dh"><b>${SHORT[d]}</b><em>${date.getDate()}</em>${fmtDate(date)===todayStr?'<span class="today">Today</span>':""}<button class="btn quiet small add" data-add="${d}" aria-label="Add to ${DAYS[d]}">+ Add</button></div>`;
+    if(editing&&editing.isNew&&editing.d===d)html+=editor(null,d);
+    if(!list.length&&!(editing&&editing.isNew&&editing.d===d))html+=`<p class="empty">Nothing planned</p>`;
+    for(const e of list){
+      if(editing&&editing.i===e.i){html+=editor(e,d);continue}
+      const color=e.who==="b"?"var(--b)":e.who==="w"?"var(--w)":"var(--both)";
+      const name=e.who==="b"?week.names.b:e.who==="w"?week.names.w:"Both";
+      html+=`<button class="ev${e.work?" work":""}" data-edit="${e.i}"><span class="bar" style="background:${color};color:${color}"></span><span><span class="tm">${range(e.s,e.e)}</span><br><span class="ti">${e.work?"Work · "+esc(placeOf(e)):esc(e.t)}</span>${e.sub?`<br><span class="sub">${esc(e.sub)}</span>`:""}</span><span class="who">${esc(name)}</span></button>`;
+    }
+    html+=`</article>`;
+  }
+  $("days").innerHTML=html;
+  wireEditor();
+  setStatus();
+}
+
+function editor(e,d){
+  const who=e?e.who:(store.get("fw-lastwho")||"w"), work=e?!!e.work:false;
+  const title=e?(work?placeOf(e):e.t):"", s=e?pad(e.s):"09:00", en=e&&e.e?pad(e.e):"";
+  const days=ORDER.map(x=>`<label><input type="checkbox" name="also" value="${x}" ${x===d?"checked disabled":""}><span>${SHORT[x]}</span></label>`).join("");
+  return `<form class="edit" id="editForm" novalidate>
+    <div class="seg" role="group" aria-label="Whose event">
+      <button type="button" data-who="b" aria-pressed="${who==="b"}">${esc(week.names.b)}</button>
+      <button type="button" data-who="w" aria-pressed="${who==="w"}">${esc(week.names.w)}</button>
+      <button type="button" data-who="both" aria-pressed="${who==="both"}">Both</button>
+    </div>
+    <div class="seg" role="group" aria-label="Kind">
+      <button type="button" data-kind="event" aria-pressed="${!work}">Event</button>
+      <button type="button" data-kind="work" aria-pressed="${work}">Work block</button>
+    </div>
+    <label class="field"><span id="tLabel">${work?"Where":"What"}</span><input id="fTitle" type="text" value="${esc(title)}" placeholder="${work?"campus, home…":"Dinner with the Campbells"}" autocomplete="off"></label>
+    <div class="row2">
+      <label class="field"><span>Starts</span><input id="fStart" type="time" value="${s}" step="900"></label>
+      <label class="field"><span>Ends</span><input id="fEnd" type="time" value="${en}" step="900"></label>
+    </div>
+    <label class="field"><span>Note (optional)</span><input id="fSub" type="text" value="${esc(e?e.sub:"")}" placeholder="Place, who's coming…" autocomplete="off"></label>
+    <div class="field"><span>${e?"Also copy to":"Also add to"}</span><div class="chips">${days}</div></div>
+    <p class="err" id="fErr" hidden></p>
+    <div class="actions">
+      <button class="btn primary" id="fSave">${e?"Save":"Add"}</button>
+      <button type="button" class="btn quiet" id="fCancel">Cancel</button>
+      ${e?'<button type="button" class="btn quiet" id="fDelete" style="margin-left:auto;color:var(--warn)">Delete</button>':""}
+    </div>
+  </form>`;
+}
+
+function wireEditor(){
+  const f=$("editForm"); if(!f)return;
+  const segs=f.querySelectorAll(".seg");
+  segs.forEach(seg=>seg.addEventListener("click",ev=>{
+    const b=ev.target.closest("button"); if(!b)return;
+    seg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    if(b.dataset.kind){const w=b.dataset.kind==="work";$("tLabel").textContent=w?"Where":"What";$("fTitle").placeholder=w?"campus, home…":"Dinner with the Campbells"}
+  }));
+  $("fCancel").onclick=()=>{editing=null;render()};
+  if($("fDelete"))$("fDelete").onclick=()=>{week.events.splice(editing.i,1);editing=null;changed();render()};
+  f.addEventListener("input",()=>{$("fErr").hidden=true});
+  f.addEventListener("submit",ev=>{
+    ev.preventDefault();
+    const who=f.querySelector("[data-who][aria-pressed=true]").dataset.who;
+    const work=f.querySelector("[data-kind][aria-pressed=true]").dataset.kind==="work";
+    const title=$("fTitle").value.trim(), s=$("fStart").value, en=$("fEnd").value, sub=$("fSub").value.trim();
+    const err=m=>{$("fErr").textContent=m;$("fErr").hidden=false};
+    if(!title)return err(work?"Add where the work is, like campus or home.":"Add a name for the event.");
+    if(!s)return err("Add a start time.");
+    if(en&&mins(en)<=mins(s))return err("The end time needs to be after the start time.");
+    const base={s:short(s),who,t:work?"Work · "+title:title};
+    if(en)base.e=short(en); if(sub)base.sub=sub; if(work)base.work=1;
+    const day=editing.isNew?editing.d:week.events[editing.i].d;
+    if(editing.isNew)week.events.push({d:day,...base}); else week.events[editing.i]={d:day,...base};
+    f.querySelectorAll("input[name=also]:checked:not(:disabled)").forEach(c=>week.events.push({d:+c.value,...base}));
+    store.set("fw-lastwho",who);
+    editing=null; changed(); render();
+    document.getElementById("day-"+day)?.scrollIntoView({block:"nearest"});
+  });
+  setTimeout(()=>f.scrollIntoView({block:"nearest",behavior:"smooth"}),30);
+}
+
+$("days").addEventListener("click",ev=>{
+  const add=ev.target.closest("[data-add]"), ed=ev.target.closest("[data-edit]");
+  if(add){editing={d:+add.dataset.add,isNew:true};render();$("fTitle")?.focus()}
+  else if(ed){editing={i:+ed.dataset.edit};render()}
+});
+
+/* ---------- send to TV ---------- */
+async function send(){
+  const btns=[$("saveTop"),$("saveBottom")]; btns.forEach(b=>{b.disabled=true;b.textContent="Sending…"});
+  try{
+    const latest=await fetchLatest();
+    if(latest.blob.ct!==loadedCt){
+      // Someone saved since this phone loaded. Don't overwrite their work silently.
+      let theirs=null; try{theirs=await decrypt(latest.blob,pass)}catch(e){}
+      if(theirs&&!confirmInline("Eden or another phone sent changes since you opened the app. Send yours anyway and replace them?")){btns.forEach(b=>b.textContent="Send to TV");setStatus();return}
+    }
+    const d=new Date(); week.updated=`${MONTHS[d.getMonth()]} ${d.getDate()}`;
+    const blob=await encrypt(week,pass);
+    const res=await gh("PUT",{message:`Update week of ${weekLabel()}`,content:utf8b64(JSON.stringify(blob)),sha:latest.sha});
+    sha=res.content.sha; loadedCt=blob.ct; dirty=false; store.del("fw-draft");
+    toast("Sent. The TV will show it within a few minutes.");
+  }catch(e){toast(ghMessage(e),true)}
+  btns.forEach(b=>b.textContent="Send to TV"); setStatus();
+}
+// Inline confirm (dialogs are avoided): first tap warns, second tap within 8s proceeds.
+let confirmArmed=0;
+function confirmInline(msg){if(Date.now()-confirmArmed<8000){confirmArmed=0;return true}confirmArmed=Date.now();toast(msg+" Tap Send to TV again to replace them.",true);return false}
+$("saveTop").onclick=$("saveBottom").onclick=send;
+
+/* ---------- new week ---------- */
+$("newWeekBtn").onclick=()=>{
+  const p=$("newWeek"); p.hidden=!p.hidden; if(p.hidden)return;
+  const thisMon=dateOf(1), todayMon=mondayOf(new Date());
+  const next=todayMon>thisMon?todayMon:addDays(thisMon,7);
+  $("nwDate").value=fmtDate(next);
+};
+$("newWeek").querySelector(".seg").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+$("nwCancel").onclick=()=>$("newWeek").hidden=true;
+$("newWeek").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  if(!$("nwDate").value)return;
+  const mon=mondayOf(parseDate($("nwDate").value));
+  const mode=$("newWeek").querySelector("[aria-pressed=true]").dataset.copy;
+  week.start=fmtDate(addDays(mon,-1));
+  week.events=mode==="all"?week.events:mode==="work"?week.events.filter(e=>e.work):[];
+  $("newWeek").hidden=true; editing=null; changed(); render();
+  toast(`Started the week of ${weekLabel()}. Add this week's events, then tap Send to TV.`);
+});
+
+/* ---------- screenshots ---------- */
+let shots=[], zoom=1;
+$("addShot").onclick=()=>$("shotFile").click();
+$("shotFile").onchange=e=>{for(const f of e.target.files){shots.push({url:URL.createObjectURL(f),name:f.name})}e.target.value="";drawShots();if(shots.length)openShot(shots.length-1)};
+function drawShots(){
+  $("shots").querySelectorAll(".shot").forEach(n=>n.remove());
+  shots.forEach((s,i)=>{const d=document.createElement("div");d.className="shot";d.innerHTML=`<img src="${s.url}" alt="Screenshot ${i+1}" data-open="${i}"><button aria-label="Remove screenshot" data-rm="${i}">×</button>`;$("shots").insertBefore(d,$("addShot"))});
+}
+$("shots").addEventListener("click",e=>{
+  const o=e.target.closest("[data-open]"), r=e.target.closest("[data-rm]");
+  if(r){URL.revokeObjectURL(shots[+r.dataset.rm].url);shots.splice(+r.dataset.rm,1);drawShots();$("viewer").hidden=true}
+  else if(o)openShot(+o.dataset.open);
+});
+function openShot(i){zoom=1;$("vImg").style.width="100%";$("vImg").src=shots[i].url;$("vName").textContent=`Screenshot ${i+1}`;$("viewer").hidden=false}
+$("vClose").onclick=()=>$("viewer").hidden=true;
+$("zIn").onclick=()=>{zoom=Math.min(4,zoom+.5);$("vImg").style.width=zoom*100+"%"};
+$("zOut").onclick=()=>{zoom=Math.max(1,zoom-.5);$("vImg").style.width=zoom*100+"%"};
+
+/* ---------- settings ---------- */
+$("settingsForm").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  const b=$("nB").value.trim(), w=$("nW").value.trim(), k=$("setKey").value.trim();
+  if(b&&b!==week.names.b||w&&w!==week.names.w){week.names={b:b||week.names.b,w:w||week.names.w};changed();render()}
+  if(k){key=k;store.set("fw-key",k);$("setKey").value=""}
+  toast("Settings saved.");
+});
+$("forget").onclick=()=>{["fw-pass","fw-key","fw-draft","fw-lastwho"].forEach(store.del);location.reload()};
+
+/* ---------- start ---------- */
+async function start(){
+  if(!pass||!key){showSetup();return}
+  $("statusText").textContent="Loading…";
+  try{
+    const {blob,sha:s}=await fetchLatest();
+    week=await decrypt(blob,pass); sha=s; loadedCt=blob.ct;
+    week.names=week.names||{b:"Brandon",w:"Eden"};
+    const draft=JSON.parse(store.get("fw-draft")||"null");
+    if(draft&&draft.base===loadedCt){week=draft.week;dirty=true}   // unfinished edits from last time
+    else store.del("fw-draft");
+    $("nB").value=week.names.b; $("nW").value=week.names.w;
+    $("setup").hidden=true; $("app").hidden=false;
+    render();
+    if(mondayOf(new Date())>dateOf(1)&&!dirty)toast(`The TV is still showing the week of ${weekLabel()}. Tap New week to start this one.`);
+  }catch(e){
+    if(e&&e.name==="OperationError"){store.del("fw-pass");pass=null;showSetup("That passcode didn't work. Check it and try again.")}
+    else if(e&&e.status){showSetup(ghMessage(e))}
+    else{$("app").hidden=false;$("statusText").textContent="";toast("Couldn't load the calendar. Check your connection and reopen the app.",true)}
+  }
+}
+function showSetup(msg){
+  $("app").hidden=true;$("setup").hidden=false;
+  if(pass)$("sPass").value=pass; if(key)$("sKey").value=key;
+  $("setupErr").textContent=msg||"";$("setupErr").hidden=!msg;
+}
+$("setupForm").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  const p=$("sPass").value.trim().toLowerCase(), k=$("sKey").value.trim();
+  if(!p||!k){$("setupErr").textContent="Enter both the passcode and the save key.";$("setupErr").hidden=false;return}
+  pass=p;key=k;store.set("fw-pass",p);store.set("fw-key",k);
+  $("setupGo").textContent="Unlocking…";
+  start().finally(()=>$("setupGo").textContent="Unlock");
+});
+start();
+</script>
+</body>
+</html>
