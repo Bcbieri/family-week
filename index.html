@@ -105,6 +105,8 @@ ul{list-style:none;margin:0;padding:0;display:flex;gap:.45vw;min-width:0}
 .band span{position:absolute;right:.2vw;top:.35vw;writing-mode:vertical-rl;font-family:var(--mono);font-weight:500;font-size:.78vw;letter-spacing:.12em;text-transform:uppercase;color:var(--p2);white-space:nowrap;overflow:hidden;max-height:calc(100% - .7vw);background:var(--panel-solid);border-radius:.3vw;padding:.3vw .1vw}
 .band.b span{color:var(--p1)}
 .band.tiny span{display:none}
+.band span .bi{font-weight:700;color:var(--fg)}
+.ini{display:inline-block;font-family:var(--mono);font-weight:500;font-size:.85em;letter-spacing:.04em;line-height:1.2;background:rgba(255,249,243,.24);color:var(--on);border-radius:.25vw;padding:0 .3vw;margin-right:.4vw;vertical-align:.06em;white-space:nowrap}
 .tg.split .band.b span{right:auto;left:.2vw}
 .tg.split .blk:not(.R){left:1.9vw}
 .blk{position:absolute;left:.5vw;right:1.9vw;border-radius:.45vw;padding:.22vw .55vw;overflow:hidden;color:var(--on);box-shadow:0 .2vw .7vw rgba(52,38,26,.35);box-sizing:border-box;display:flex;flex-direction:column;gap:.05vw}
@@ -226,15 +228,19 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 
 
 const C={b:"var(--p1)",w:"var(--p2)",both:"var(--both)"};
+// Initials in front of every event: B, E, or B & E
+function iniText(who){const n=(WEEK.names||{b:"Brandon",w:"Eden"}),b=(n.b||"B")[0].toUpperCase(),w=(n.w||"E")[0].toUpperCase();return who==="b"?b:who==="w"?w:`${b} & ${w}`}
+const ini=who=>`<span class="ini">${iniText(who)}</span>`;
+
 function dayEvents(d){return WEEK.events.filter(e=>e.d===d).sort((a,b)=>mins(a.s)-mins(b.s))}
 const place=e=>e.t.replace(/^Work · /,"").replace(/^Field Experience · (.*)/,"field · $1");
 function strips(list,cls){
   const by={};list.filter(e=>e.work).forEach(e=>{(by[e.who]=by[e.who]||[]).push(e)});
-  return Object.keys(by).map(k=>`<li class="${cls} ${k}"><b>Work</b><span>${by[k].map(e=>`${range(e.s,e.e)} <i>${esc(place(e))}</i>`).join('<em> · </em>')}</span></li>`).join("");
+  return Object.keys(by).map(k=>`<li class="${cls} ${k}"><b>${iniText(k)} · Work</b><span>${by[k].map(e=>`${range(e.s,e.e)} <i>${esc(place(e))}</i>`).join('<em> · </em>')}</span></li>`).join("");
 }
 function line(e,d,today,nowM){
   const s=mins(e.s),en=e.e?mins(e.e):s+30,isNow=d===today&&nowM>=s&&nowM<en;
-  return `<li class="line ${e.who}${isNow?" now":""}"><span class="sw" style="background:${C[e.who]}"></span><span class="tm">${range(e.s,e.e)}${isNow?'<span class="nowtag">NOW</span>':""}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`;
+  return `<li class="line ${e.who}${isNow?" now":""}"><span class="sw" style="background:${C[e.who]}"></span><span class="tm">${ini(e.who)}${range(e.s,e.e)}${isNow?'<span class="nowtag">NOW</span>':""}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`;
 }
 function agenda(d,today,nowM){
   const all=dayEvents(d), ev=all.filter(e=>!e.work);
@@ -243,7 +249,7 @@ function agenda(d,today,nowM){
 function chips(d,today,nowM){
   const all=dayEvents(d), ev=all.filter(e=>!e.work);
   const c=ev.map(e=>{const s=mins(e.s),en=e.e?mins(e.e):s+30,isNow=d===today&&nowM>=s&&nowM<en;
-    return `<li class="ev ${e.who}${isNow?" now":""}"><span class="dot"></span><span class="tm">${range(e.s,e.e)}${isNow?'<span class="nowtag">NOW</span>':""}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`}).join("");
+    return `<li class="ev ${e.who}${isNow?" now":""}"><span class="dot"></span><span class="tm">${ini(e.who)}${range(e.s,e.e)}${isNow?'<span class="nowtag">NOW</span>':""}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`}).join("");
   return c+strips(all,"strip pill")||'<li class="free">Nothing planned</li>';
 }
 function header(){
@@ -273,14 +279,14 @@ function column(d,H){
   // When both people have work that day, Brandon's work sits on the left half and Eden's on the right.
   const split=all.some(e=>e.work&&e.who==="b")&&all.some(e=>e.work&&e.who==="w");
   const side=who=>!split?"":who==="b"?"left:.25vw;right:calc(50% + .15vw);":who==="w"?"left:calc(50% + .15vw);right:.25vw;":"";
-  all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}${(en-s)<75?" tiny":""}" style="${side(e.who)}top:calc(${pct(s)}% + .1vw);height:calc(${pct(en)-pct(s)}% - .2vw)"><span>${esc(place(e))}</span></div>`});
+  all.filter(e=>e.work).forEach(e=>{const s=mins(e.s),en=mins(e.e);inner+=`<div class="band ${e.who}${(en-s)<75?" tiny":""}" style="${side(e.who)}top:calc(${pct(s)}% + .1vw);height:calc(${pct(en)-pct(s)}% - .2vw)"><span><b class="bi">${iniText(e.who)}</b> ${esc(place(e))}</span></div>`});
   ev.forEach(e=>{
     const s=mins(e.s),en=e.e?mins(e.e):s+30, len=en-s;
     const clash=ev.some(o=>o!==e&&o.who!==e.who&&e.who!=="both"&&o.who!=="both"&&mins(o.s)<en&&(o.e?mins(o.e):mins(o.s)+30)>s);
     const lane=clash?(e.who==="b"?" R":" L"):"";
     const size=big?(len<75?" short"+(len<=30?" xs":""):""):(len<=60?" short":len<120?" mid":"");
     const isNow=big&&H.nowM>=s&&H.nowM<en;
-    inner+=`<div class="blk ${e.who}${lane}${size}" style="top:calc(${pct(s)}% + .22vw);height:calc(${pct(en)-pct(s)}% - .44vw);${isNow?"outline:2px solid var(--fg);outline-offset:1px;":""}"><span class="tm">${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub&&!size?`<span class="sub">${esc(e.sub)}</span>`:""}</div>`;
+    inner+=`<div class="blk ${e.who}${lane}${size}" style="top:calc(${pct(s)}% + .22vw);height:calc(${pct(en)-pct(s)}% - .44vw);${isNow?"outline:2px solid var(--fg);outline-offset:1px;":""}"><span class="tm">${ini(e.who)}${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub&&!size?`<span class="sub">${esc(e.sub)}</span>`:""}</div>`;
   });
   if(big&&H.nowM>T0&&H.nowM<T1)inner+=`<div class="nowline" style="top:${pct(H.nowM)}%"></div>`;
   return `<div class="dh pill"><b>${DAYS[d]}</b><em>${H.date(d)}</em>${H.tag(d)}</div><div class="tg${split?" split":""}">${inner}</div>`;
@@ -288,7 +294,7 @@ function column(d,H){
 function weekendItems(d,H){
   const all=dayEvents(d), ev=all.filter(e=>!e.work);
   const out=ev.map(e=>{const s=mins(e.s),en=e.e?mins(e.e):s+30,isNow=d===H.today&&H.nowM>=s&&H.nowM<en;
-    return `<li class="ev ${e.who}${isNow?" now":""}"><span class="dot"></span><span class="tm">${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`});
+    return `<li class="ev ${e.who}${isNow?" now":""}"><span class="dot"></span><span class="tm">${ini(e.who)}${range(e.s,e.e)}</span><span class="ti">${esc(e.t)}</span>${e.sub?`<span class="sub">${esc(e.sub)}</span>`:""}</li>`});
   const st=strips(all,"strip pill"); if(st)out.push(st);
   if(!out.length)out.push('<li class="free">Nothing planned</li>');
   return out;
@@ -452,7 +458,7 @@ load();
 setInterval(()=>{if(lastCt)render()},30000);
 
 setInterval(load,2*60*1000);
-const VERSION="16";
+const VERSION="18";
 async function checkVersion(){try{const v=(await (await fetch("version.txt?t="+Date.now(),{cache:"no-store"})).text()).trim();if(v&&v!==VERSION)location.replace(location.pathname+"?v="+v)}catch(e){}}
 setInterval(checkVersion,10*60*1000);checkVersion();
 setTimeout(()=>{try{location.reload()}catch(e){}},6*60*60*1000);
